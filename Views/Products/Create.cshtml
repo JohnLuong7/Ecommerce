@@ -1,0 +1,81 @@
+﻿@model Ecommerce.Models.Product
+
+@{
+    ViewData["Title"] = "Create Product";
+    var categories = ViewData["Categories"] as List<Ecommerce.Models.Category>;
+}
+
+<h2>Create Product</h2>
+
+<form asp-action="Create" method="post" enctype="multipart/form-data">
+    <div class="form-group mb-3">
+        <label asp-for="Name" class="form-label"></label>
+        <input asp-for="Name" class="form-control" />
+        <span asp-validation-for="Name" class="text-danger"></span>
+    </div>
+
+    <div class="form-group mb-3">
+        <label asp-for="ShortDescription" class="form-label"></label>
+        <input asp-for="ShortDescription" class="form-control" />
+        <span asp-validation-for="ShortDescription" class="text-danger"></span>
+    </div>
+
+    <div class="form-group mb-3">
+        <label asp-for="Description" class="form-label"></label>
+        <textarea asp-for="Description" class="form-control"></textarea>
+        <span asp-validation-for="Description" class="text-danger"></span>
+    </div>
+
+    <div class="form-group mb-3">
+        <label asp-for="Price" class="form-label"></label>
+        <input asp-for="Price" class="form-control" />
+        <span asp-validation-for="Price" class="text-danger"></span>
+    </div>
+
+    <div class="form-group mb-3">
+        <label asp-for="SKU" class="form-label"></label>
+        <input asp-for="SKU" class="form-control" />
+        <span asp-validation-for="SKU" class="text-danger"></span>
+    </div>
+
+    <div class="form-group mb-3">
+        <label asp-for="IsPublished" class="form-check-label"></label>
+        <input asp-for="IsPublished" class="form-check-input" />
+        <span asp-validation-for="IsPublished" class="text-danger"></span>
+    </div>
+
+    <div class="form-group mb-3">
+        <label asp-for="CategoryId" class="form-label"></label>
+        <select asp-for="CategoryId" class="form-select" asp-items="@(new SelectList(categories, "CategoryId", "Name"))">
+            <option value="">-- Select Category --</option>
+        </select>
+        <span asp-validation-for="CategoryId" class="text-danger"></span>
+    </div>
+    <div class="form-group mb-3">
+        <label for="quantity" class="form-label">Quantity</label>
+        <input type="number" name="quantity" id="quantity" class="form-control" value="0" min="0" />
+    </div>
+
+    <div class="form-group mb-3">
+        <label for="images">Upload Images</label>
+        <input type="file" name="images" id="images" multiple class="form-control" />
+    </div>
+
+    <button type="submit" class="btn btn-primary">Create</button> |
+    <a asp-action="Index" class="btn btn-secondary">Back to List</a>
+</form>
+@if (ViewBag.Errors != null)
+{
+    <div class="alert alert-danger">
+        <ul>
+            @foreach (var err in (List<string>)ViewBag.Errors)
+            {
+                <li>@err</li>
+            }
+        </ul>
+    </div>
+}
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

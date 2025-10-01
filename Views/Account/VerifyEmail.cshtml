@@ -1,0 +1,28 @@
+﻿@model Ecommerce.ViewModels.VerifyEmailViewModel
+
+@{
+    Layout = "_AccountLayout";
+    ViewData["Title"] = "Xác thực Email";
+}
+
+<form asp-action="VerifyEmail" method="post" class="account-form">
+    @Html.AntiForgeryToken()
+    <div asp-validation-summary="ModelOnly" class="validation-summary-errors"></div>
+
+    <div class="form-group">
+        <label asp-for="Email"></label>
+        <input asp-for="Email" class="form-control" placeholder="Nhập email" />
+        <span asp-validation-for="Email" class="text-danger"></span>
+    </div>
+    <button type="submit" class="btn btn-primary">
+        Verify
+    </button>
+    <a asp-controller="Home" asp-action="Index" class="account-link">
+        Về trang chủ
+    </a>
+
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

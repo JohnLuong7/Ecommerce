@@ -1,0 +1,22 @@
+﻿@model List<Ecommerce.Models.Product>
+
+<h2>Danh sách sản phẩm</h2>
+
+<div class="row">
+    @foreach (var product in Model)
+    {
+        <div class="col-md-3 mb-4">
+            <div class="card">
+                <img src="~/images/@product.ProductImages.FirstOrDefault(pi => pi.IsMain)?.FileName"
+                     class="card-img-top" alt="@product.Name" style="height: 200px; object-fit: contain;" />
+                <div class="card-body">
+                    <h5 class="card-title">@product.Name</h5>
+                    <p class="card-text">@product.Category?.Name</p>
+                    <p class="text-success fw-bold">@product.Price.ToString("C")</p>
+                    <a asp-controller="ProductCatalog" asp-action="Details" asp-route-id="@product.ProductId"
+                       class="btn btn-primary">Xem chi tiết</a>
+                </div>
+            </div>
+        </div>
+    }
+</div>

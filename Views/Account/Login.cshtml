@@ -1,0 +1,50 @@
+﻿@model Ecommerce.ViewModels.LoginViewModel
+
+@{
+    Layout = "_AccountLayout";
+    ViewData["Title"] = "Đăng nhập";
+}
+
+<form asp-action="Login" method="post" class="account-form">
+    @Html.AntiForgeryToken()
+    <div asp-validation-summary="ModelOnly" class="validation-summary-errors"></div>
+
+    <div class="form-group">
+        <label asp-for="Email"></label>
+        <input asp-for="Email" class="form-control" placeholder="Nhập email" />
+        <span asp-validation-for="Email" class="text-danger"></span>
+    </div>
+
+    <div class="form-group">
+        <label asp-for="Password"></label>
+        <input asp-for="Password"
+               type="password"
+               class="form-control"
+               placeholder="Nhập mật khẩu" />
+        <span asp-validation-for="Password" class="text-danger"></span>
+    </div>
+
+    <div class="form-check mb-3">
+        <input asp-for="RememberMe" class="form-check-input" />
+        <label asp-for="RememberMe" class="form-check-label"></label>
+    </div>
+
+    <button type="submit" class="btn btn-primary">
+        Đăng nhập
+    </button>
+
+    <a asp-action="VerifyEmail" class="account-link">
+        Quên mật khẩu?
+    </a>
+    <a asp-controller="Account" asp-action="Register" class="account-link">
+        Đăng ký tài khoản mới
+    </a>
+    <a asp-controller="Home" asp-action="Index" class="account-link">
+        Về trang chủ
+    </a>
+
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

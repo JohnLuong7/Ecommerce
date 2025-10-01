@@ -1,0 +1,63 @@
+﻿@model Ecommerce.Models.Cart
+
+@{
+    ViewData["Title"] = "Thanh toán đơn hàng";
+}
+
+<h2>@ViewData["Title"]</h2>
+
+@if (Model == null || Model.CartItems == null || Model.CartItems.Count == 0)
+{
+    <div class="alert alert-warning">Giỏ hàng của bạn đang trống.</div>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Sản phẩm</th>
+                <th>Giá</th>
+                <th>Số lượng</th>
+                <th>Thành tiền</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model.CartItems)
+            {
+                <tr>
+                    <td>@item.Product.Name</td>
+                    <td>@item.Product.Price.ToString("C")</td>
+                    <td>@item.Quantity</td>
+                    <td>@((item.Quantity * item.Product.Price).ToString("C"))</td>
+                </tr>
+            }
+        </tbody>
+        <tfoot>
+            <tr>
+                <th colspan="3" class="text-end">Tổng cộng:</th>
+                <th>@Model.CartItems.Sum(i => i.Quantity * i.Product.Price).ToString("C")</th>
+            </tr>
+        </tfoot>
+    </table>
+
+    <form asp-action="PlaceOrder" method="post">
+        <div class="mb-3">
+            <label for="shippingAddress" class="form-label">Địa chỉ giao hàng</label>
+            <textarea id="shippingAddress" name="shippingAddress" class="form-control" required></textarea>
+        </div>
+
+        <div class="mb-3">
+            <label for="paymentMethod" class="form-label">Phương thức thanh toán</label>
+            <select id="paymentMethod" name="paymentMethod" class="form-select" required>
+                <option value="">-- Chọn phương thức --</option>
+                <option value="COD">Thanh toán khi nhận hàng (COD)</option>
+                <option value="BankTransfer">Chuyển khoản ngân hàng</option>
+                <option value="CreditCard">Thẻ tín dụng</option>
+                <option value="VNPay">Thanh toán qua VNPay</option>
+            </select>
+        </div>
+
+        <button type="submit" class="btn btn-success">Xác nhận đặt hàng</button>
+        <a asp-controller="Cart" asp-action="Index" class="btn btn-secondary ms-2">Quay lại giỏ hàng</a>
+    </form>
+}

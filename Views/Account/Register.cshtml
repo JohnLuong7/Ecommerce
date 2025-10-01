@@ -1,0 +1,62 @@
+﻿@model Ecommerce.ViewModels.RegisterViewModel
+@{
+    Layout = "_AccountLayout";
+    ViewData["Title"] = "Đăng ký";
+}
+
+<form asp-action="Register" method="post" class="account-form">
+
+    <div asp-validation-summary="ModelOnly" class="validation-summary-errors"></div>
+    <div class="form-group">
+        <label asp-for="Name"></label>
+        <input asp-for="Name" class="form-control" placeholder="Nhập tên" />
+        <span asp-validation-for="Name" class="text-danger"></span>
+    </div>
+    <div class="form-group">
+        <label asp-for="PhoneNumber"></label>
+        <input asp-for="PhoneNumber" class="form-control" placeholder="Nhập số điện thoại" />
+        <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+    </div>
+
+
+    <div class="form-group">
+        <label asp-for="Email"></label>
+        <input asp-for="Email" class="form-control" placeholder="Nhập email" />
+        <span asp-validation-for="Email" class="text-danger"></span>
+    </div>
+
+    <div class="form-group">
+        <label asp-for="Password"></label>
+        <input asp-for="Password"
+               type="password"
+               class="form-control"
+               placeholder="Nhập mật khẩu" />
+        <span asp-validation-for="Password" class="text-danger"></span>
+    </div>
+
+    <div class="form-group">
+        <label asp-for="ConfirmPassword"></label>
+        <input asp-for="ConfirmPassword"
+               type="password"
+               class="form-control"
+               placeholder="Nhập mật khẩu" />
+        <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
+    </div>
+
+
+    <button type="submit" class="btn btn-primary">
+        Đăng ký
+    </button>
+
+    <a asp-controller="Account" asp-action="Login" class="account-link">
+        Đã có tài khoản? Đăng nhập
+    </a>
+    <a asp-controller="Home" asp-action="Index" class="account-link">
+        Về trang chủ
+    </a>
+
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

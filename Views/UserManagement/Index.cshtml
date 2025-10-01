@@ -1,0 +1,59 @@
+﻿@model Ecommerce.ViewModels.UserListViewModel
+
+@{
+    ViewData["Title"] = "User Management";
+}
+
+<h2>User Management</h2>
+
+<form method="get" class="mb-3">
+    <div class="input-group">
+        <input type="text" name="search" value="@Model.Search" class="form-control" placeholder="Search by name or email" />
+        <button class="btn btn-primary" type="submit">Search</button>
+        <a asp-action="Index" class="btn btn-secondary">Reset</a>
+    </div>
+</form>
+
+<a asp-action="Create" class="btn btn-success mb-3">+ Add New User</a>
+
+<table class="table table-bordered table-striped">
+    <thead class="table-dark">
+        <tr>
+            <th>Full Name</th>
+            <th>Email</th>
+            <th>UserName</th>
+            <th style="width: 220px;">Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var user in Model.Users)
+        {
+            <tr>
+                <td>@user.FullName</td>
+                <td>@user.Email</td>
+                <td>@user.UserName</td>
+                <td>
+                    <a asp-action="Edit" asp-route-id="@user.Id" class="btn btn-warning btn-sm">Edit</a>
+                    <a asp-action="ManageRoles" asp-route-id="@user.Id" class="btn btn-info btn-sm">Roles</a>
+                    <form asp-action="Delete" asp-route-id="@user.Id" method="post" style="display:inline;" onsubmit="return confirm('Are you sure?');">
+                        <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                    </form>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@if (Model.TotalPages > 1)
+{
+    <nav>
+        <ul class="pagination">
+            @for (int i = 1; i <= Model.TotalPages; i++)
+            {
+                <li class="page-item @(Model.CurrentPage == i ? "active" : "")">
+                    <a class="page-link" asp-action="Index" asp-route-search="@Model.Search" asp-route-page="@i">@i</a>
+                </li>
+            }
+        </ul>
+    </nav>
+}
