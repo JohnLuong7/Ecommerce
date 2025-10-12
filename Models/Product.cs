@@ -1,46 +1,85 @@
-﻿using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Collections.Generic;
 
 namespace Ecommerce.Models
 {
     public class Product
     {
+        // Thuộc tính chính
         [Key]
         public int ProductId { get; set; }
 
-        [Required, StringLength(200)]
+        [Required(ErrorMessage = "Tên sản phẩm là bắt buộc.")]
+        [StringLength(255)]
+        [Display(Name = "Tên Sản Phẩm")]
         public string Name { get; set; }
 
-        [StringLength(500)]
-        public string ShortDescription { get; set; }
+        [Display(Name = "Mã Sản Phẩm (SKU)")]
+        [StringLength(50)]
+        public string? Sku { get; set; }
 
-        public string Description { get; set; }
+        // MÔ TẢ (Đã thêm ShortDescription để fix lỗi CS1061)
+        [Display(Name = "Mô tả ngắn")]
+        public string? ShortDescription { get; set; } // KHẮC PHỤC LỖI CS1061
 
-        [Column(TypeName = "decimal(18,2)")]
+        [Display(Name = "Mô tả chi tiết")]
+        public string? Description { get; set; }
+
+        // GIÁ
+        [Required(ErrorMessage = "Giá bán là bắt buộc.")]
+        [Column(TypeName = "decimal(18, 0)")]
+        [Display(Name = "Giá Bán")]
         public decimal Price { get; set; }
 
-        [StringLength(50)]
-        public string SKU { get; set; }
+        [Column(TypeName = "decimal(18, 0)")]
+        [Display(Name = "Giá Gốc (nếu có khuyến mãi)")]
+        public decimal? OriginalPrice { get; set; }
 
-        public bool IsPublished { get; set; }
+        // TRẠNG THÁI
+        [Display(Name = "Hiển thị công khai")]
+        public bool IsPublished { get; set; } = true;
 
-        [Required]
-        public int CategoryId { get; set; }
+        [Display(Name = "Ngày Tạo")]
+        [DataType(DataType.DateTime)]
+        public DateTime CreatedDate { get; set; } = DateTime.Now;
 
-        [ValidateNever]
-        public Category Category { get; set; }
 
-        [ValidateNever]
-        public Inventory Inventory { get; set; }
+        // KHU VỰC JSON (Variants, Colors, Promotions, Specs, Commitments)
+        // Đây là các trường lưu trữ chuỗi JSON, được Deserialize ở file Details.cshtml
 
-        [ValidateNever]
-        public ICollection<ProductImage> ProductImages { get; set; }
+        [Column(TypeName = "nvarchar(MAX)")]
+        public string? VariantsJson { get; set; } // Dùng cho versions
 
-        public Product()
-        {
-            ProductImages = new HashSet<ProductImage>();
-        }
+        [Column(TypeName = "nvarchar(MAX)")]
+        public string? ColorsJson { get; set; }
+
+        [Column(TypeName = "nvarchar(MAX)")]
+        public string? PromotionsJson { get; set; }
+
+        [Column(TypeName = "nvarchar(MAX)")]
+        public string? OfferBannerJson { get; set; }
+
+        [Column(TypeName = "nvarchar(MAX)")]
+        public string? SpecsJson { get; set; }
+
+        [Column(TypeName = "nvarchar(MAX)")]
+        public string? CommitmentsJson { get; set; }
+
+
+        // Mối quan hệ Navigation
+
+        // 1. Category
+        [Display(Name = "Danh mục")]
+        public int? CategoryId { get; set; }
+        [ForeignKey("CategoryId")]
+        public Category? Category { get; set; } // Giả định bạn có Model Category
+
+        // 2. Product Images (Danh sách ảnh)
+        public ICollection<ProductImage> ProductImages { get; set; } = new List<ProductImage>(); // Giả định bạn có Model ProductImage
+
+        // 3. Inventory (Tồn kho)
+        // Đây là thuộc tính dẫn đến lỗi CS0229, cần dùng biến cục bộ để tránh lỗi
+        public Inventory? Inventory { get; set; } // Giả định bạn có Model Inventory
     }
 }

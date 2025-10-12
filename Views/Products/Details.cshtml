@@ -14,6 +14,7 @@
         <dd class="col-sm-10">@Model.Name</dd>
 
         <dt class="col-sm-2">Short Description</dt>
+        @* SỬA: Đảm bảo khớp với tên thuộc tính trong Model *@
         <dd class="col-sm-10">@Model.ShortDescription</dd>
 
         <dt class="col-sm-2">Description</dt>
@@ -23,7 +24,8 @@
         <dd class="col-sm-10">@Model.Price.ToString("C")</dd>
 
         <dt class="col-sm-2">SKU</dt>
-        <dd class="col-sm-10">@Model.SKU</dd>
+        @* SỬA: Phải là 'Sku' (viết thường) để khớp với Model đã sửa *@
+        <dd class="col-sm-10">@Model.Sku</dd>
 
         <dt class="col-sm-2">Is Published</dt>
         <dd class="col-sm-10">@Model.IsPublished</dd>

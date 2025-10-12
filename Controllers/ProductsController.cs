@@ -5,6 +5,9 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Linq;
 using System.Threading.Tasks;
+using System.IO;
+using System;
+using Microsoft.AspNetCore.Http;
 
 namespace Ecommerce.Controllers
 {
@@ -16,11 +19,10 @@ namespace Ecommerce.Controllers
             _context = context;
         }
 
-        // GET: Products
+        // GET: Products (Index)
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Index()
         {
-            // Include Category để load tên Category lên view
             var products = await _context.Products
                                 .Include(p => p.Category)
                                 .ToListAsync();
@@ -33,11 +35,10 @@ namespace Ecommerce.Controllers
             if (id == null) return NotFound();
 
             var product = await _context.Products
-                        .Include(p => p.Category)
-                        .Include(p => p.Inventory)
-                        .Include(p => p.ProductImages)
-                        .FirstOrDefaultAsync(p => p.ProductId == id);
-
+                                .Include(p => p.Category)
+                                .Include(p => p.Inventory)
+                                .Include(p => p.ProductImages)
+                                .FirstOrDefaultAsync(p => p.ProductId == id);
 
             if (product == null) return NotFound();
 
@@ -48,7 +49,6 @@ namespace Ecommerce.Controllers
         [Authorize(Roles = "Admin")]
         public IActionResult Create()
         {
-            // Truyền danh sách Category để chọn trong dropdown
             ViewData["Categories"] = _context.Categories.ToList();
             return View();
         }
@@ -65,10 +65,16 @@ namespace Ecommerce.Controllers
                 return View(product);
             }
 
+            // Gán CreatedDate nếu chưa được gán
+            if (product.CreatedDate == default(DateTime))
+            {
+                product.CreatedDate = DateTime.Now;
+            }
+
             _context.Add(product);
             await _context.SaveChangesAsync();
 
-            // Tạo Inventory ngay sau khi product đã có Id
+            // Tạo Inventory
             var inventory = new Inventory
             {
                 ProductId = product.ProductId,
@@ -77,14 +83,11 @@ namespace Ecommerce.Controllers
             _context.Inventory.Add(inventory);
             await _context.SaveChangesAsync();
 
-            // Xử lý ảnh như trước
+            // Xử lý ảnh
             if (images != null && images.Count > 0)
             {
                 var imageFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images");
-                if (!Directory.Exists(imageFolder))
-                {
-                    Directory.CreateDirectory(imageFolder);
-                }
+                if (!Directory.Exists(imageFolder)) Directory.CreateDirectory(imageFolder);
 
                 bool firstImage = true;
                 foreach (var image in images)
@@ -114,17 +117,17 @@ namespace Ecommerce.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-
-
-
-
         // GET: Products/Edit/5
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null) return NotFound();
 
-            var product = await _context.Products.FindAsync(id);
+            var product = await _context.Products
+                                .Include(p => p.ProductImages)
+                                .Include(p => p.Inventory)
+                                .FirstOrDefaultAsync(p => p.ProductId == id);
+
             if (product == null) return NotFound();
 
             ViewData["Categories"] = _context.Categories.ToList();
@@ -135,26 +138,51 @@ namespace Ecommerce.Controllers
         [HttpPost]
         [Authorize(Roles = "Admin")]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, Product product, List<IFormFile> newImages)
+        public async Task<IActionResult> Edit(int id, Product product, List<IFormFile> newImages, int quantity)
         {
             if (id != product.ProductId)
                 return NotFound();
+
+            // Phải đảm bảo CreatedDate được giữ nguyên
+            var existingProduct = await _context.Products.AsNoTracking().FirstOrDefaultAsync(p => p.ProductId == id);
+            if (existingProduct != null)
+            {
+                product.CreatedDate = existingProduct.CreatedDate;
+            }
 
             if (ModelState.IsValid)
             {
                 try
                 {
+                    // 1. Cập nhật thông tin Product
                     _context.Update(product);
+
+                    // 2. CẬP NHẬT TỒN KHO
+                    var inventory = await _context.Inventory.FirstOrDefaultAsync(i => i.ProductId == id);
+                    if (inventory != null)
+                    {
+                        inventory.Quantity = quantity;
+                        _context.Inventory.Update(inventory);
+                    }
+                    else
+                    {
+                        _context.Inventory.Add(new Inventory { ProductId = id, Quantity = quantity });
+                    }
+
                     await _context.SaveChangesAsync();
 
+                    // 3. XỬ LÝ ẢNH MỚI
                     if (newImages != null && newImages.Count > 0)
                     {
+                        var imageFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images");
+                        if (!Directory.Exists(imageFolder)) Directory.CreateDirectory(imageFolder);
+
                         foreach (var image in newImages)
                         {
                             if (image.Length > 0)
                             {
                                 var fileName = $"{Guid.NewGuid()}{Path.GetExtension(image.FileName)}";
-                                var filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images", fileName);
+                                var filePath = Path.Combine(imageFolder, fileName);
 
                                 using (var stream = new FileStream(filePath, FileMode.Create))
                                 {
@@ -176,6 +204,7 @@ namespace Ecommerce.Controllers
                 }
                 catch (DbUpdateConcurrencyException)
                 {
+                    // Lỗi CS0103 xảy ra ở đây
                     if (!ProductExists(product.ProductId))
                         return NotFound();
                     else
@@ -186,7 +215,6 @@ namespace Ecommerce.Controllers
             ViewData["Categories"] = _context.Categories.ToList();
             return View(product);
         }
-
 
         // GET: Products/Delete/5
         [Authorize(Roles = "Admin")]
@@ -217,30 +245,31 @@ namespace Ecommerce.Controllers
             }
             return RedirectToAction(nameof(Index));
         }
+
         [HttpPost]
         [Authorize(Roles = "Admin")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteImage(int imageId)
         {
             var image = await _context.ProductImages.FindAsync(imageId);
-            if (image != null)
-            {
-                // Xóa file ảnh trên disk
-                var filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images", image.FileName);
-                if (System.IO.File.Exists(filePath))
-                {
-                    System.IO.File.Delete(filePath);
-                }
+            if (image == null) return NotFound();
 
-                _context.ProductImages.Remove(image);
-                await _context.SaveChangesAsync();
+            var productId = image.ProductId;
+
+            // Xóa file ảnh trên disk
+            var filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images", image.FileName);
+            if (System.IO.File.Exists(filePath))
+            {
+                System.IO.File.Delete(filePath);
             }
 
-            // Redirect về Edit sản phẩm tương ứng
-            return RedirectToAction("Edit", new { id = image.ProductId });
+            _context.ProductImages.Remove(image);
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction("Edit", new { id = productId });
         }
 
-
+        // PHƯƠNG THỨC ĐÃ THÊM: KHẮC PHỤC LỖI CS0103
         private bool ProductExists(int id)
         {
             return _context.Products.Any(p => p.ProductId == id);

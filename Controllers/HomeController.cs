@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using Ecommerce.Data;
 using Ecommerce.Models;
+using Ecommerce.Models.ViewModels; // Đảm bảo đã include namespace này
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -27,13 +28,25 @@ namespace Ecommerce.Controllers
             var productsQuery = _context.Products
                 .Include(p => p.Category)
                 .Include(p => p.ProductImages)
+                // BẮT BUỘC: Include Inventory để truy cập thông tin tồn kho
+                .Include(p => p.Inventory)
+                // Tối ưu hóa truy vấn Select để tránh lỗi biên dịch và gọi FirstOrDefault() nhiều lần
                 .Select(p => new ProductViewModel
                 {
                     ProductId = p.ProductId,
                     Name = p.Name,
                     Price = p.Price,
                     CategoryName = p.Category.Name,
-                    MainImage = p.ProductImages.FirstOrDefault(img => img.IsMain).FileName
+                    // Lấy ảnh chính (nếu có)
+                    MainImage = p.ProductImages.FirstOrDefault(img => img.IsMain).FileName,
+                    // Lấy số lượng tồn kho một cách an toàn. 
+                    // Dùng Select Many hoặc Select(i => i.Quantity) để lấy Quantity.
+                    // Nếu p.Inventory là Collection (One-to-Many): 
+                    // Quantity = p.Inventory.Select(i => (int?)i.Quantity).FirstOrDefault() ?? 0
+                    // Nếu p.Inventory là đối tượng (One-to-One):
+                    Quantity = p.Inventory != null
+                                ? p.Inventory.Quantity // Truy cập trực tiếp Quantity nếu là One-to-One
+                                : 0
                 })
                 .AsQueryable();
 

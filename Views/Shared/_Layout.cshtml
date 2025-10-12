@@ -1,90 +1,510 @@
-﻿<!DOCTYPE html>
-<html lang="en">
+﻿@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="vi">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - Ecommerce</title>
+    <title>@ViewData["Title"] - Trang Web Thương Mại Điện Tử</title>
+
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/Ecommerce.styles.css" asp-append-version="true" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" />
+
+    <style>
+        body {
+            background-color: #f0f0f0;
+        }
+
+        /* ===== NAVBAR DESIGN ===== */
+        .top-navbar {
+            background-color: #d70018;
+            padding: 12px 0;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .navbar-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 15px;
+        }
+
+        /* Logo */
+        .navbar-logo {
+            flex: 0 0 150px;
+        }
+
+        .logo-link {
+            display: flex;
+            align-items: center;
+            text-decoration: none;
+            color: #fff;
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+            .logo-link i {
+                font-size: 28px;
+                margin-right: 8px;
+            }
+
+        /* Search Bar */
+        .navbar-search {
+            flex: 1;
+            max-width: 500px;
+            margin: 0 20px;
+        }
+
+        .search-form {
+            position: relative;
+            width: 100%;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 10px 45px 10px 15px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            outline: none;
+        }
+
+            .search-input::placeholder {
+                color: #999;
+            }
+
+        .search-btn {
+            position: absolute;
+            right: 0;
+            top: 0;
+            bottom: 0;
+            background: none;
+            border: none;
+            padding: 0 15px;
+            color: #d70018;
+            cursor: pointer;
+            font-size: 18px;
+        }
+
+            .search-btn:hover {
+                color: #a50013;
+            }
+
+        /* Right Actions */
+        .navbar-actions {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .navbar-action-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #fff;
+            text-decoration: none;
+            padding: 8px 12px;
+            border-radius: 6px;
+            transition: background-color 0.2s;
+            font-size: 14px;
+        }
+
+            .navbar-action-item:hover {
+                background-color: rgba(255,255,255,0.1);
+                color: #fff;
+            }
+
+            .navbar-action-item i {
+                font-size: 20px;
+            }
+
+        /* Style for Logout button (which is a submit button inside a form) */
+        .logout-btn {
+            display: flex; /* Inherit flex from .navbar-action-item */
+            align-items: center;
+            gap: 8px;
+            color: #fff;
+            padding: 8px 12px;
+            border-radius: 6px;
+            transition: background-color 0.2s;
+            font-size: 14px;
+            background: none;
+            border: none;
+            cursor: pointer;
+        }
+
+            .logout-btn:hover {
+                background-color: rgba(255,255,255,0.1);
+                color: #fff;
+            }
+
+            .logout-btn i {
+                font-size: 20px;
+            }
+
+        .cart-icon-wrapper {
+            position: relative;
+        }
+
+        .cart-badge {
+            position: absolute;
+            top: -6px;
+            right: -6px;
+            background-color: #ffd400;
+            color: #d70018;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 2px 6px;
+            border-radius: 10px;
+            min-width: 18px;
+            text-align: center;
+        }
+
+        /* Menu Navigation */
+        .main-menu {
+            background-color: #fff;
+            border-bottom: 1px solid #e0e0e0;
+            padding: 0;
+        }
+
+        .menu-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 15px;
+        }
+
+        .menu-list {
+            display: flex;
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            gap: 5px;
+        }
+
+        .menu-item {
+            position: relative;
+        }
+
+        .menu-link {
+            display: block;
+            padding: 12px 20px;
+            color: #333;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+            border-bottom: 2px solid transparent;
+        }
+
+            .menu-link:hover,
+            .menu-link.active {
+                color: #d70018;
+                border-bottom-color: #d70018;
+            }
+
+            .menu-link i {
+                margin-right: 6px;
+            }
+
+        /* Dropdown Menu */
+        .dropdown-toggle::after {
+            margin-left: 6px;
+            font-family: 'Font Awesome 6 Free';
+            content: "\f107";
+            border: none;
+            vertical-align: middle;
+        }
+
+        .menu-item:hover .dropdown-menu {
+            display: block;
+        }
+
+        .dropdown-menu {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background-color: #fff;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+            min-width: 220px;
+            padding: 8px 0;
+            margin-top: 0;
+            display: none;
+            z-index: 1000;
+        }
+
+        .dropdown-item {
+            display: block;
+            padding: 10px 20px;
+            color: #333;
+            text-decoration: none;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+            .dropdown-item:hover {
+                background-color: #f5f5f5;
+                color: #d70018;
+            }
+
+            .dropdown-item i {
+                margin-right: 8px;
+                width: 16px;
+                text-align: center;
+            }
+
+        .dropdown-divider {
+            height: 1px;
+            background-color: #e0e0e0;
+            margin: 8px 0;
+        }
+
+        /* Mobile Menu Toggle */
+        .mobile-menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            color: #fff;
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+        /* Footer */
+        footer {
+            background: #333;
+            color: #bbb;
+            padding: 30px 0;
+            text-align: center;
+            font-size: 14px;
+            margin-top: 40px;
+        }
+
+            footer a {
+                color: #d70018;
+                text-decoration: none;
+            }
+
+                footer a:hover {
+                    text-decoration: underline;
+                }
+
+    </style>
+
     @RenderSection("Styles", required: false)
 </head>
+
 <body>
     <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
-            <div class="container">
-                <a class="navbar-brand" asp-controller="Home" asp-action="Index">Ecommerce</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse"
-                        aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
+        <nav class="top-navbar">
+            <div class="navbar-container">
+                <div class="navbar-logo">
+                    <a class="logo-link" asp-controller="Home" asp-action="Index">
+                        <i class="bi bi-shop"></i>
+                        <span>TGDĐ</span>
+                    </a>
+                </div>
+
+                <div class="navbar-search">
+                    <form class="search-form" asp-controller="Products" asp-action="Search" method="get">
+                        <input type="text"
+                               name="query"
+                               class="search-input"
+                               placeholder="Tìm kiếm sản phẩm..." />
+                        <button type="submit" class="search-btn">
+                            <i class="bi bi-search"></i>
+                        </button>
+                    </form>
+                </div>
+
+                <button class="mobile-menu-toggle" type="button" onclick="toggleMobileMenu()">
+                    <i class="bi bi-list"></i>
                 </button>
 
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <!-- Menu trái -->
-                    <ul class="navbar-nav me-auto">
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-controller="Home" asp-action="Index">Home</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-controller="Home" asp-action="Privacy">Privacy</a>
-                        </li>
+                <div class="navbar-actions">
+                    <a class="navbar-action-item" href="#" title="Menu danh mục">
+                        <i class="bi bi-grid-3x3-gap"></i>
+                        <span>Menu</span>
+                    </a>
 
-                        @if (User.IsInRole("Admin"))
-                        {
-                            <li class="nav-item">
-                                <a class="nav-link text-dark" asp-controller="Home" asp-action="Admin">Admin</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link text-dark" asp-controller="Products" asp-action="Index">Product</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link text-dark" asp-controller="Cart" asp-action="Index">Cart</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link text-dark" asp-controller="Inventory" asp-action="Index">Inventory</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link text-dark" asp-controller="UserManagement" asp-action="Index">User Management</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link text-dark" asp-controller="User" asp-action="Profile">Admin Profile</a>
-                            </li>
-                        }
-                        @if (User.IsInRole("User"))
-                        {
-                            <li class="nav-item">
-                                <a class="nav-link text-dark" asp-controller="User" asp-action="Profile">User Profile</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link text-dark" asp-controller="Cart" asp-action="Index">Cart</a>
-                            </li>
-                        }
-                    </ul>
+                    @if (!User.IsInRole("Admin"))
+                    {
+                        <a class="navbar-action-item" asp-controller="Cart" asp-action="Index" title="Giỏ hàng">
+                            <div class="cart-icon-wrapper">
+                                <i class="bi bi-cart3"></i>
+                                <span class="cart-badge">3</span>
+                            </div>
+                            <span>Giỏ hàng</span>
+                        </a>
+                    }
 
-                    <!-- Menu phải -->
-                    <ul class="navbar-nav">
-                        <partial name="_LoginPartial" />
-                    </ul>
+                    @if (User.Identity.IsAuthenticated)
+                    {
+                        <a class="navbar-action-item" asp-controller="User" asp-action="Profile" title="Tài khoản">
+                            <i class="bi bi-person-circle"></i>
+                            <span>@User.Identity.Name</span>
+                        </a>
+
+                        <form asp-controller="Account" asp-action="Logout" method="post" class="d-inline">
+                            <button type="submit" class="logout-btn" title="Đăng xuất">
+                                <i class="bi bi-box-arrow-right"></i>
+                                <span>Đăng xuất</span>
+                            </button>
+                        </form>
+                    }
+                    else
+                    {
+                        <a class="navbar-action-item" asp-controller="Account" asp-action="Login" title="Đăng nhập">
+                            <i class="bi bi-box-arrow-in-right"></i>
+                            <span>Đăng nhập</span>
+                        </a>
+                    }
                 </div>
+            </div>
+        </nav>
+
+        <nav class="main-menu" id="mainMenu">
+            <div class="menu-container">
+                <ul class="menu-list">
+                    <li class="menu-item">
+                        <a class="menu-link @(ViewContext.RouteData.Values["action"]?.ToString() == "Index" && ViewContext.RouteData.Values["controller"]?.ToString() == "Home" ? "active" : "")"
+                           asp-controller="Home"
+                           asp-action="Index">
+                            <i class="bi bi-house-door"></i>
+                            Trang Chủ
+                        </a>
+                    </li>
+
+                    <li class="menu-item">
+                        <a class="menu-link" href="#">
+                            <i class="bi bi-phone"></i>
+                            Điện Thoại
+                        </a>
+                    </li>
+
+                    <li class="menu-item">
+                        <a class="menu-link" href="#">
+                            <i class="bi bi-laptop"></i>
+                            Laptop
+                        </a>
+                    </li>
+
+                    <li class="menu-item">
+                        <a class="menu-link" href="#">
+                            <i class="bi bi-tablet"></i>
+                            Tablet
+                        </a>
+                    </li>
+
+                    <li class="menu-item">
+                        <a class="menu-link" href="#">
+                            <i class="bi bi-headphones"></i>
+                            Phụ Kiện
+                        </a>
+                    </li>
+
+                    @if (User.IsInRole("Admin"))
+                    {
+                        <li class="menu-item">
+                            <a class="menu-link dropdown-toggle" href="#" onclick="toggleDropdown(event)">
+                                <i class="bi bi-gear"></i>
+                                Quản Trị
+                            </a>
+                            <div class="dropdown-menu">
+                                <a class="dropdown-item" asp-controller="Home" asp-action="Admin">
+                                    <i class="bi bi-speedometer2"></i>
+                                    Bảng Điều Khiển
+                                </a>
+                                <a class="dropdown-item" asp-controller="Products" asp-action="Index">
+                                    <i class="bi bi-box-seam"></i>
+                                    Quản Lý Sản Phẩm
+                                </a>
+                                <a class="dropdown-item" asp-controller="Inventory" asp-action="Index">
+                                    <i class="bi bi-boxes"></i>
+                                    Quản Lý Kho
+                                </a>
+                                <a class="dropdown-item" asp-controller="UserManagement" asp-action="Index">
+                                    <i class="bi bi-people"></i>
+                                    Quản Lý Người Dùng
+                                </a>
+                                <div class="dropdown-divider"></div>
+                                <a class="dropdown-item" asp-controller="User" asp-action="Profile">
+                                    <i class="bi bi-person"></i>
+                                    Hồ Sơ Của Tôi
+                                </a>
+                            </div>
+                        </li>
+                    }
+
+                    @if (User.IsInRole("User"))
+                    {
+                        <li class="menu-item">
+                            <a class="menu-link" asp-controller="User" asp-action="Profile">
+                                <i class="bi bi-person"></i>
+                                Hồ Sơ
+                            </a>
+                        </li>
+                    }
+                </ul>
             </div>
         </nav>
     </header>
 
-    <div class="container">
+    <div class="container" style="padding-top: 20px; min-height: calc(100vh - 250px);">
         <main role="main" class="pb-3">
             @RenderBody()
         </main>
     </div>
 
-    <footer class="border-top footer text-muted">
+    <footer>
         <div class="container">
-            &copy; 2025 - Ecommerce - <a asp-controller="Home" asp-action="Privacy">Privacy</a>
+            <p class="mb-2">
+                &copy; 2025 - Trang Web Thương Mại Điện Tử
+            </p>
+            <p class="mb-0">
+                <a asp-controller="Home" asp-action="Privacy">Chính Sách Bảo Mật</a>
+                |
+                <a href="#">Điều Khoản Sử Dụng</a>
+                |
+                <a href="#">Liên Hệ</a>
+            </p>
         </div>
     </footer>
 
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="~/js/site.js" asp-append-version="true"></script>
+
+    <script>
+        // Toggle mobile menu
+        function toggleMobileMenu() {
+            const mainMenu = document.getElementById('mainMenu');
+            mainMenu.classList.toggle('show');
+        }
+
+        // Toggle dropdown in mobile
+        function toggleDropdown(event) {
+            if (window.innerWidth <= 991) {
+                event.preventDefault();
+                const menuItem = event.target.closest('.menu-item');
+                menuItem.classList.toggle('show');
+            }
+        }
+
+        // Close mobile menu when clicking outside
+        document.addEventListener('click', function(event) {
+            const mainMenu = document.getElementById('mainMenu');
+            const menuToggle = document.querySelector('.mobile-menu-toggle');
+
+            if (!mainMenu.contains(event.target) && !menuToggle.contains(event.target)) {
+                mainMenu.classList.remove('show');
+            }
+        });
+    </script>
+
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>
