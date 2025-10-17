@@ -4,81 +4,314 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - Ecommerce</title>
+
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/Ecommerce.styles.css" asp-append-version="true" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" />
+
+    <style>
+                        :root {
+                                    --yellow: #fdd835;
+                                    --orange: #ff8f00;
+                                    --dark: #212121;
+                                    --gray: #f9f9f9;
+                                    --text: #333;
+
+        }
+
+                        body {
+                                    font-family: "Segoe UI", sans-serif;
+                                    background-color: #fff;
+                                    color: var(--text);
+
+        }
+
+                        .top-header {
+                                    background-color: var(--yellow);
+                                    padding: 12px 0;
+                                    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+
+        }
+
+                        .logo-brand {
+                                    font-weight: 900;
+                                    font-size: 1.8rem;
+                                    color: var(--dark);
+                                    text-decoration: none;
+                                    letter-spacing: -0.5px;
+
+        }
+
+                            .logo-brand i {
+                                        color: var(--orange);
+
+        }
+
+                        .search-bar {
+                                    flex: 1;
+                                    margin: 0 30px;
+                                    position: relative;
+
+        }
+
+                            .search-bar input {
+                                        width: 100%;
+                                        border-radius: 25px;
+                                        border: 1px solid #ddd;
+                                        padding: 8px 40px 8px 15px;
+                                        transition: box-shadow 0.3s;
+
+        }
+
+                                .search-bar input:focus {
+                                            outline: none;
+                                            box-shadow: 0 0 5px var(--orange);
+
+        }
+
+                            .search-bar button {
+                                        position: absolute;
+                                        right: 10px;
+                                        top: 5px;
+                                        border: none;
+                                        background: none;
+                                        color: var(--orange);
+                                        font-size: 1.2rem;
+
+        }
+
+                        .action-link {
+                                    color: var(--dark);
+                                    text-decoration: none;
+                                    font-size: 0.9rem;
+                                    font-weight: 500;
+                                    display: flex;
+                                    align-items: center;
+                                    gap: 6px;
+                                    padding: 6px 10px;
+                                    border-radius: 8px;
+                                    transition: background-color 0.2s;
+
+        }
+
+                            .action-link:hover {
+                                        background-color: rgba(0, 0, 0, 0.05);
+
+        }
+
+                        .cart-icon-wrapper {
+                                    position: relative;
+
+        }
+
+                        .cart-badge {
+                                    position: absolute;
+                                    top: -6px;
+                                    right: -8px;
+                                    background: var(--orange);
+                                    color: #fff;
+                                    border-radius: 50%;
+                                    font-size: 0.7rem;
+                                    padding: 2px 6px;
+                                    font-weight: bold;
+
+        }
+
+                        .menu-bar {
+                                    background: var(--dark);
+
+        }
+
+                            .menu-bar .nav-link {
+                                        color: #fff;
+                                        font-weight: 500;
+                                        display: flex;
+                                        align-items: center;
+                                        gap: 6px;
+                                        padding: 10px 18px;
+                                        transition: all 0.2s;
+
+        }
+
+                                .menu-bar .nav-link:hover {
+                                            background-color: var(--orange);
+                                            color: #fff;
+
+        }
+
+                        .dropdown-menu a {
+                                    color: var(--text);
+
+        }
+
+                        .footer-custom {
+                                    background: var(--gray);
+                                    padding: 40px 0 20px;
+                                    font-size: 0.95rem;
+
+        }
+
+                            .footer-custom h6 {
+                                        font-weight: 700;
+                                        color: var(--dark);
+                                        margin-bottom: 15px;
+
+        }
+
+                            .footer-custom a {
+                                        color: #555;
+                                        text-decoration: none;
+
+        }
+
+                                .footer-custom a:hover {
+                                            color: var(--orange);
+
+        }
+
+                        .social-icons i {
+                                    font-size: 1.3rem;
+                                    color: var(--dark);
+                                    margin-right: 12px;
+                                    transition: color 0.3s;
+
+        }
+
+                            .social-icons i:hover {
+                                        color: var(--orange);
+
+        }
+
+
+
+    </style>
+
     @RenderSection("Styles", required: false)
 </head>
 <body>
-    <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
-            <div class="container">
-                <a class="navbar-brand" asp-controller="Home" asp-action="Index">Ecommerce</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse"
-                        aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
 
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <!-- Menu trái -->
-                    <ul class="navbar-nav me-auto">
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-controller="Home" asp-action="Index">Home</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-controller="Home" asp-action="Privacy">Privacy</a>
-                        </li>
+    <header class="sticky-top">
+        <div class="top-header">
+            <div class="container d-flex align-items-center justify-content-between flex-wrap">
 
-                        @if (User.IsInRole("Admin"))
-                        {
-                            <li class="nav-item">
-                                <a class="nav-link text-dark" asp-controller="Home" asp-action="Admin">Admin</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link text-dark" asp-controller="Products" asp-action="Index">Product</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link text-dark" asp-controller="Cart" asp-action="Index">Cart</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link text-dark" asp-controller="Inventory" asp-action="Index">Inventory</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link text-dark" asp-controller="UserManagement" asp-action="Index">User Management</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link text-dark" asp-controller="User" asp-action="Profile">Admin Profile</a>
-                            </li>
-                        }
-                        @if (User.IsInRole("User"))
-                        {
-                            <li class="nav-item">
-                                <a class="nav-link text-dark" asp-controller="User" asp-action="Profile">User Profile</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link text-dark" asp-controller="Cart" asp-action="Index">Cart</a>
-                            </li>
-                        }
-                    </ul>
+                <a class="logo-brand" asp-controller="Home" asp-action="Index">
+                    TheG<i class="fa-solid fa-mobile-screen-button mx-1"></i>iDiDong
+                </a>
 
-                    <!-- Menu phải -->
-                    <ul class="navbar-nav">
-                        <partial name="_LoginPartial" />
-                    </ul>
+                <div class="search-bar d-none d-md-block">
+                    <input type="text" placeholder="Tìm kiếm sản phẩm..." />
+                    <button><i class="fa-solid fa-magnifying-glass"></i></button>
                 </div>
+
+                <div class="d-flex align-items-center">
+                    <a class="action-link" asp-controller="User" asp-action="Profile">
+                        <i class="fa-regular fa-user"></i>
+                        @if (User.Identity?.IsAuthenticated == true)
+                        {
+                            <span>Hồ sơ</span>
+                        }
+                        else
+                        {
+                            <span>Đăng nhập</span>
+                        }
+                    </a>
+
+                    @if (User.Identity?.IsAuthenticated == true)
+                    {
+                        <a class="action-link text-danger ms-2" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Home")">
+                            <i class="fa-solid fa-right-from-bracket"></i>
+                            <span>Thoát</span>
+                        </a>
+                    }
+
+                    @{
+                        int cartCount = (ViewBag.CartItemCount is int count) ? count : 0;
+                    }
+
+                    <a class="action-link ms-3" asp-controller="Cart" asp-action="Index">
+                        <span class="cart-icon-wrapper">
+                            <i class="fa-solid fa-basket-shopping"></i>
+                            @* START: Phần tử giỏ hàng được sửa để luôn có ID cho AJAX *@
+                            @if (cartCount > 0)
+                            {
+                                <span class="cart-badge" id="cartBadge">@cartCount</span>
+                            }
+                            else
+                            {
+                                <span class="cart-badge" id="cartBadge" style="display:none;">0</span>
+                            }
+                            @* END: Phần tử giỏ hàng được sửa *@
+                        </span>
+                        <span>Giỏ hàng</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <nav class="menu-bar">
+            <div class="container">
+                <ul class="nav">
+                    <li class="nav-item"><a class="nav-link" asp-controller="Home" asp-action="Index"><i class="fa-solid fa-house"></i> Trang chủ</a></li>
+
+                    <li class="nav-item"><a class="nav-link" href="#"><i class="fa-solid fa-bolt"></i> Electronics</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#"><i class="fa-solid fa-book-open"></i> Books</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#"><i class="fa-solid fa-shirt"></i> Clothing</a></li>
+
+                    @if (User.IsInRole("Admin"))
+                    {
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
+                                <i class="fa-solid fa-user-shield"></i> Quản trị
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" asp-controller="Products" asp-action="Index">Quản lý sản phẩm</a></li>
+                                <li><a class="dropdown-item" asp-controller="Inventory" asp-action="Index">Quản lý kho</a></li>
+                                <li><a class="dropdown-item" asp-controller="UserManagement" asp-action="Index">Quản lý người dùng</a></li>
+                                @* SỬA MỤC QUẢN LÝ BANNER *@
+                                <li><a class="dropdown-item" asp-controller="Banners" asp-action="Banner_manager" **>Quản lý Banner</a></li>
+                                @* KẾT THÚC SỬA MỤC QUẢN LÝ BANNER *@
+                            </ul>
+                        </li>
+                    }
+                </ul>
             </div>
         </nav>
     </header>
 
-    <div class="container">
+    <div class="container mt-4">
         <main role="main" class="pb-3">
             @RenderBody()
         </main>
     </div>
 
-    <footer class="border-top footer text-muted">
+    <footer class="footer-custom mt-5">
         <div class="container">
-            &copy; 2025 - Ecommerce - <a asp-controller="Home" asp-action="Privacy">Privacy</a>
+            <div class="row text-center text-md-start">
+                <div class="col-md-4 mb-4">
+                    <h6>Về chúng tôi</h6>
+                    <ul class="list-unstyled">
+                        <li><a href="#">Giới thiệu công ty</a></li>
+                        <li><a asp-controller="Home" asp-action="Privacy">Chính sách bảo mật</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-4 mb-4">
+                    <h6>Hỗ trợ khách hàng</h6>
+                    <ul class="list-unstyled">
+                        <li><a href="#">Trung tâm bảo hành</a></li>
+                        <li><a href="#">Chính sách đổi trả</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-4 mb-4">
+                    <h6>Kết nối với chúng tôi</h6>
+                    <div class="social-icons">
+                        <a href="#"><i class="fa-brands fa-facebook-f"></i></a>
+                        <a href="#"><i class="fa-brands fa-instagram"></i></a>
+                        <a href="#"><i class="fa-brands fa-youtube"></i></a>
+                    </div>
+                </div>
+            </div>
+            <div class="text-center text-muted mt-3 border-top pt-3">
+                © 2025 - <strong>ECOMMERCE</strong>. Designed by <span class="text-warning">TGDD Style</span>.
+            </div>
         </div>
     </footer>
 

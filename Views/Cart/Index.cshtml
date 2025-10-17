@@ -1,176 +1,124 @@
 ﻿@model Ecommerce.Models.Cart
-
 @{
-    ViewData["Title"] = "Your Shopping Cart";
+    ViewData["Title"] = "Giỏ hàng của bạn";
 }
 
-@section Styles {
-    <style>
-        .cart-empty {
-            text-align: center;
-            padding: 3rem 1rem;
-            color: #6c757d;
-        }
+<div class="container my-5">
+    <h2 class="mb-4 fw-bold text-primary">🛒 Giỏ hàng của bạn</h2>
 
-        .cart-summary {
-            background: #f8f9fa;
-            padding: 1.5rem;
-            border-radius: 8px;
-            box-shadow: 0 1px 4px rgba(0,0,0,0.05);
-        }
-
-        /* Popup overlay */
-        .popup-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.4);
-            display: none;
-            align-items: center;
-            justify-content: center;
-            z-index: 1050;
-        }
-
-        /* Popup content */
-        .popup-content {
-            background: #fff;
-            padding: 1.5rem;
-            border-radius: 10px;
-            text-align: center;
-            max-width: 400px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
-            animation: fadeIn 0.3s ease;
-        }
-
-            .popup-content h5 {
-                margin-bottom: 1rem;
-                color: #dc3545;
-            }
-
-            .popup-content button {
-                margin-top: 1rem;
-            }
-
-        /* Animation */
-        @@keyframes fadeIn {
-            from {
-                transform: translateY(-20px);
-                opacity: 0;
-            }
-
-            to {
-                transform: translateY(0);
-                opacity: 1;
-            }
-        }
-    </style>
-}
-
-<h2 class="mb-4">@ViewData["Title"]</h2>
-
-<div class="btn btn-info mb-3">
-    <a class="nav-link text-white text-md-center" asp-controller="Checkout" asp-action="OrderHistory">
-        Đơn hàng đã đặt
-    </a>
-</div>
-
-@if (Model.CartItems == null || !Model.CartItems.Any())
-{
-    <div class="cart-empty display-3">
-        <i class="bi bi-cart-x" style="font-size:5rem;"></i>
-        <p class="mt-3">Giỏ hàng của bạn đang trống.</p>
-        <a asp-controller="Home" asp-action="Index" class="btn btn-primary mt-2 text-lg-center">Tiếp tục mua sắm</a>
-    </div>
-}
-else
-{
-    <div class="row g-4">
-        <!-- Giỏ hàng -->
-        <div class="col-lg-8">
-            <div class="table-responsive">
-                <table class="table align-middle">
+    @if (!Model.CartItems.Any())
+    {
+        <div class="alert alert-info text-center">
+            Giỏ hàng trống. <a href="/" class="fw-bold text-decoration-none">Tiếp tục mua sắm</a>.
+        </div>
+    }
+    else
+    {
+        <div class="row">
+            <div class="col-md-8">
+                <table class="table align-middle table-hover shadow-sm bg-white rounded">
                     <thead class="table-light">
-                        <tr>
+                        <tr class="text-center">
                             <th>Sản phẩm</th>
-                            <th class="text-end">Giá</th>
-                            <th class="text-center">Số lượng</th>
-                            <th class="text-end">Thành tiền</th>
+                            <th>Giá</th>
+                            <th style="width:150px;">Số lượng</th>
+                            <th>Thành tiền</th>
                             <th></th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach (var item in Model.CartItems)
                         {
-                            <tr>
+                            <tr class="text-center align-middle" data-id="@item.CartItemId">
                                 <td>@item.Product.Name</td>
-                                <td class="text-end">@item.Product.Price.ToString("C")</td>
-                                <td class="text-center">
-                                    <form asp-action="UpdateQuantity" method="post" class="d-inline-flex align-items-center">
-                                        <input type="hidden" name="cartItemId" value="@item.CartItemId" />
-                                        <input type="number" name="quantity" value="@item.Quantity" min="1"
-                                               class="form-control form-control-sm me-2" style="width:70px" />
-                                        <button type="submit" class="btn btn-sm btn-outline-primary">↻</button>
-                                    </form>
+                                <td>@item.Product.Price.ToString("N0") ₫</td>
+                                <td>
+                                    <div class="d-flex justify-content-center align-items-center">
+                                        <button class="btn btn-sm btn-outline-secondary minus">−</button>
+                                        <input type="text" class="form-control form-control-sm text-center mx-1 quantity"
+                                               value="@item.Quantity" style="width:50px;" />
+                                        <button class="btn btn-sm btn-outline-secondary plus">+</button>
+                                    </div>
                                 </td>
-                                <td class="text-end">@((item.Quantity * item.Product.Price).ToString("C"))</td>
-                                <td class="text-center">
-                                    <form asp-action="Remove" method="post">
-                                        <input type="hidden" name="cartItemId" value="@item.CartItemId" />
-                                        <button type="submit" class="btn btn-sm btn-outline-danger">✕</button>
-                                    </form>
+                                <td class="item-total fw-bold">@((item.Product.Price * item.Quantity).ToString("N0")) ₫</td>
+                                <td>
+                                    <button class="btn btn-sm btn-danger remove-item"><i class="fas fa-trash-alt"></i></button>
                                 </td>
                             </tr>
                         }
                     </tbody>
                 </table>
             </div>
-        </div>
 
-        <!-- Tóm tắt đơn hàng -->
-        <div class="col-lg-4">
-            <div class="cart-summary">
-                <h5 class="mb-3">Tóm tắt đơn hàng</h5>
-                <div class="d-flex justify-content-between mb-2">
-                    <span>Tạm tính:</span>
-                    <span>@Model.CartItems.Sum(i => i.Quantity * i.Product.Price).ToString("C")</span>
+            <div class="col-md-4">
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <h5 class="fw-bold mb-3">Tóm tắt đơn hàng</h5>
+                        <div class="d-flex justify-content-between">
+                            <span>Tổng cộng:</span>
+                            <span id="cartTotal" class="fw-bold text-danger">
+                                @(Model.CartItems.Sum(i => i.Product.Price * i.Quantity).ToString("N0")) ₫
+                            </span>
+                        </div>
+                        <hr />
+                        <button class="btn btn-success w-100 mt-2">Thanh toán</button>
+                    </div>
                 </div>
-                <div class="d-flex justify-content-between fw-bold border-top pt-2">
-                    <span>Tổng cộng:</span>
-                    <span>@Model.CartItems.Sum(i => i.Quantity * i.Product.Price).ToString("C")</span>
-                </div>
-                <a asp-controller="Checkout" asp-action="Index" class="btn btn-success w-100 mt-3">Thanh toán</a>
             </div>
         </div>
-    </div>
-}
-
-<!-- Popup HTML -->
-@if (TempData["ErrorMessage"] != null)
-{
-    <div id="errorPopup" class="popup-overlay">
-        <div class="popup-content">
-            <h5>Lỗi</h5>
-            <p>@TempData["ErrorMessage"]</p>
-            <button class="btn btn-primary" onclick="hidePopup()">Đóng</button>
-        </div>
-    </div>
-}
+    }
+</div>
 
 @section Scripts {
     <script>
-        function showPopup() {
-            document.getElementById('errorPopup').style.display = 'flex';
-        }
-        function hidePopup() {
-            document.getElementById('errorPopup').style.display = 'none';
-        }
-        window.onload = function () {
-            var popup = document.getElementById('errorPopup');
-            if (popup) {
-                showPopup();
-            }
-        }
+        document.querySelectorAll(".plus, .minus").forEach(btn => {
+            btn.addEventListener("click", async function () {
+                const row = this.closest("tr");
+                const id = row.dataset.id;
+                const input = row.querySelector(".quantity");
+                let quantity = parseInt(input.value);
+
+                if (this.classList.contains("plus")) quantity++;
+                else if (quantity > 1) quantity--;
+
+                input.value = quantity;
+
+                const res = await fetch("/Cart/UpdateQuantity", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                    body: `cartItemId=${id}&quantity=${quantity}`
+                });
+
+                const data = await res.json();
+                if (data.success) {
+                    row.querySelector(".item-total").textContent = data.itemTotal;
+                    document.getElementById("cartTotal").textContent = data.cartTotal;
+                } else {
+                    alert(data.message);
+                }
+            });
+        });
+
+        document.querySelectorAll(".remove-item").forEach(btn => {
+            btn.addEventListener("click", async function () {
+                if (!confirm("Bạn có chắc muốn xóa sản phẩm này?")) return;
+                const row = this.closest("tr");
+                const id = row.dataset.id;
+
+                const res = await fetch("/Cart/RemoveItem", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                    body: `cartItemId=${id}`
+                });
+
+                const data = await res.json();
+                if (data.success) {
+                    row.remove();
+                    document.getElementById("cartTotal").textContent = data.cartTotal;
+                } else {
+                    alert(data.message);
+                }
+            });
+        });
     </script>
 }

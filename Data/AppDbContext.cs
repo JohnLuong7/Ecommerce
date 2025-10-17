@@ -17,7 +17,7 @@ namespace Ecommerce.Data
         public DbSet<Order> Orders { get; set; }
         public DbSet<OrderItem> OrderItems { get; set; }
 
-    protected override void OnModelCreating(ModelBuilder builder)
+        protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
 
@@ -28,11 +28,50 @@ namespace Ecommerce.Data
                 new Category { CategoryId = 3, Name = "Clothing", Slug = "clothing", Description = "Apparel and accessories" }
             );
 
-            // Seed Products
+            // Seed Products - ĐÃ BỔ SUNG CÁC TRƯỜNG MỚI (SalePrice, SpecificationsJson, DetailContentJson)
             builder.Entity<Product>().HasData(
-                new Product { ProductId = 1, Name = "Smartphone", ShortDescription = "smartphone", Description = "Latest model smartphone", SKU = "Phone-001", Price = 699.99m, CategoryId = 1 },
-                new Product { ProductId = 2, Name = "Novel Book", ShortDescription = "novel-book", Description = "Bestselling novel", SKU = "Book-001", Price = 19.99m, CategoryId = 2},
-                new Product { ProductId = 3, Name = "T-Shirt", ShortDescription = "t-shirt", Description = "Cotton t-shirt", SKU = "Tshirt-001", Price = 9.99m, CategoryId = 3 }
+                new Product
+                {
+                    ProductId = 1,
+                    Name = "Smartphone",
+                    ShortDescription = "smartphone",
+                    Description = "Latest model smartphone",
+                    SKU = "Phone-001",
+                    Price = 699.99m,
+                    CategoryId = 1,
+                    // THÊM CÁC TRƯỜNG MỚI:
+                    SalePrice = 650.00m, // Giá khuyến mãi
+                    SpecificationsJson = null, // Giá trị null
+                    DetailContentJson = null   // Giá trị null
+                },
+                new Product
+                {
+                    ProductId = 2,
+                    Name = "Novel Book",
+                    ShortDescription = "novel-book",
+                    Description = "Bestselling novel",
+                    SKU = "Book-001",
+                    Price = 19.99m,
+                    CategoryId = 2,
+                    // THÊM CÁC TRƯỜNG MỚI:
+                    SalePrice = null,
+                    SpecificationsJson = null,
+                    DetailContentJson = null
+                },
+                new Product
+                {
+                    ProductId = 3,
+                    Name = "T-Shirt",
+                    ShortDescription = "t-shirt",
+                    Description = "Cotton t-shirt",
+                    SKU = "Tshirt-001",
+                    Price = 9.99m,
+                    CategoryId = 3,
+                    // THÊM CÁC TRƯỜNG MỚI:
+                    SalePrice = 9.99m,
+                    SpecificationsJson = null,
+                    DetailContentJson = null
+                }
             );
 
             // Seed Inventory
@@ -44,4 +83,3 @@ namespace Ecommerce.Data
         }
     }
 }
-

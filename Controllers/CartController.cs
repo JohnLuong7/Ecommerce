@@ -1,34 +1,34 @@
 ﻿using Ecommerce.Data;
 using Ecommerce.Models;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Collections.Generic;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
 
 namespace Ecommerce.Controllers
 {
     [Authorize]
+    [Route("[controller]")]
     public class CartController : Controller
     {
         private readonly AppDbContext _context;
-        private readonly UserManager<ApplicationUser> _userManager;
 
-        public CartController(AppDbContext context, UserManager<ApplicationUser> userManager)
+        public CartController(AppDbContext context)
         {
             _context = context;
-            _userManager = userManager;
         }
 
-        // Lấy giỏ hàng của user hiện tại hoặc tạo mới
-        private async Task<Cart> GetOrCreateCart()
+        private async Task<Cart> GetOrCreateUserCartAsync()
         {
-            var userId = _userManager.GetUserId(User);
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
             var cart = await _context.Carts
                 .Include(c => c.CartItems)
-                .ThenInclude(ci => ci.Product)
+                    .ThenInclude(ci => ci.Product)
+                        .ThenInclude(p => p.Inventory)
                 .FirstOrDefaultAsync(c => c.UserId == userId);
 
             if (cart == null)
@@ -36,94 +36,149 @@ namespace Ecommerce.Controllers
                 cart = new Cart
                 {
                     UserId = userId,
-                    CreatedAt = DateTime.UtcNow,
-                    CartItems = new List<CartItem>() // tránh null
+                    CreatedAt = System.DateTime.UtcNow,
+                    CartItems = new List<CartItem>()
                 };
-                _context.Carts.Add(cart);
-                await _context.SaveChangesAsync();
             }
+
             return cart;
         }
 
-        // GET: Cart
+        [HttpGet("")]
+        [HttpGet("Index")]
         public async Task<IActionResult> Index()
         {
-            var cart = await GetOrCreateCart();
+            var cart = await GetOrCreateUserCartAsync();
             return View(cart);
         }
 
-        // POST: Cart/Add
-        [HttpPost]
-        public async Task<IActionResult> Add(int productId, int quantity = 1)
+        [HttpPost("Add")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Add(int productId, int quantity, string action)
         {
-            if (quantity < 1) quantity = 1;
-
-            var product = await _context.Products.FindAsync(productId);
-            if (product == null || !product.IsPublished)
+            if (quantity <= 0)
             {
-                TempData["ErrorMessage"] = "❌ Sản phẩm không tồn tại hoặc chưa được đăng bán.";
-                return RedirectToAction("Index", "Home");
+                TempData["ErrorMessage"] = "Số lượng không hợp lệ.";
+                return RedirectToAction("Details", "Products", new { id = productId });
             }
 
-            var cart = await GetOrCreateCart();
-            var existingItem = cart.CartItems.FirstOrDefault(ci => ci.ProductId == productId);
+            var cart = await GetOrCreateUserCartAsync();
+            var product = await _context.Products
+                .Include(p => p.Inventory)
+                .FirstOrDefaultAsync(p => p.ProductId == productId);
+
+            if (product == null || !product.IsPublished)
+            {
+                TempData["ErrorMessage"] = "Sản phẩm không tồn tại hoặc chưa được đăng bán.";
+                return RedirectToAction("Details", "Products", new { id = productId });
+            }
+
+            var existingItem = cart.CartItems.FirstOrDefault(i => i.ProductId == productId);
+            int currentCartQuantity = existingItem?.Quantity ?? 0;
+            int requestedTotalQuantity = currentCartQuantity + quantity;
+            int availableQuantity = product.Inventory?.Quantity ?? 0;
+
+            if (requestedTotalQuantity > availableQuantity)
+            {
+                TempData["ErrorMessage"] = $"Số lượng yêu cầu ({requestedTotalQuantity}) vượt quá tồn kho ({availableQuantity}).";
+                return RedirectToAction("Details", "Products", new { id = productId });
+            }
 
             if (existingItem != null)
             {
                 existingItem.Quantity += quantity;
-                _context.CartItems.Update(existingItem);
             }
             else
             {
-                var cartItem = new CartItem
+                if (cart.CartId == 0)
                 {
-                    CartId = cart.CartId,
+                    _context.Carts.Add(cart);
+                    await _context.SaveChangesAsync();
+                }
+
+                var newItem = new CartItem
+                {
                     ProductId = productId,
-                    Quantity = quantity
+                    Quantity = quantity,
+                    CartId = cart.CartId
                 };
-                _context.CartItems.Add(cartItem);
+
+                cart.CartItems.Add(newItem);
+                _context.CartItems.Add(newItem);
             }
 
             await _context.SaveChangesAsync();
-            TempData["SuccessMessage"] = $"✅ Đã thêm {product.Name} vào giỏ hàng!";
-            return RedirectToAction("Index", "Home"); // hoặc RedirectToAction("Index", "Cart")
+
+            if (action == "buyNow")
+                return RedirectToAction(nameof(Index));
+
+            TempData["SuccessMessage"] = "Đã thêm sản phẩm vào giỏ hàng.";
+            return RedirectToAction("Details", "Products", new { id = productId });
         }
 
-        // POST: Cart/UpdateQuantity
-        [HttpPost]
+        // ✅ HÀM XÓA (AJAX, không reload)
+        [HttpPost("RemoveItem")]
+        [IgnoreAntiforgeryToken]
+        public async Task<IActionResult> RemoveItem(int cartItemId)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            var item = await _context.CartItems
+                .Include(ci => ci.Cart)
+                .FirstOrDefaultAsync(ci => ci.CartItemId == cartItemId && ci.Cart.UserId == userId);
+
+            if (item == null)
+                return Json(new { success = false, message = "Không tìm thấy sản phẩm." });
+
+            _context.CartItems.Remove(item);
+            await _context.SaveChangesAsync();
+
+            decimal totalCart = await _context.CartItems
+                .Where(ci => ci.Cart.UserId == userId)
+                .SumAsync(ci => (decimal)(ci.Product.Price * ci.Quantity));
+
+            return Json(new { success = true, cartTotal = totalCart.ToString("N0") + " ₫" });
+        }
+
+        // ✅ HÀM CẬP NHẬT SỐ LƯỢNG (AJAX, không reload)
+        [HttpPost("UpdateQuantity")]
+        [IgnoreAntiforgeryToken]
         public async Task<IActionResult> UpdateQuantity(int cartItemId, int quantity)
         {
-            var cartItem = await _context.CartItems.FindAsync(cartItemId);
-            if (cartItem == null) return NotFound();
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
-            if (quantity < 1)
-            {
-                _context.CartItems.Remove(cartItem);
-                TempData["SuccessMessage"] = "🗑️ Đã xóa sản phẩm khỏi giỏ.";
-            }
-            else
-            {
-                cartItem.Quantity = quantity;
-                _context.CartItems.Update(cartItem);
-                TempData["SuccessMessage"] = "✏️ Đã cập nhật số lượng sản phẩm.";
-            }
+            var itemToUpdate = await _context.CartItems
+                .Include(ci => ci.Product)
+                    .ThenInclude(p => p.Inventory)
+                .Include(ci => ci.Cart)
+                .Where(ci => ci.Cart.UserId == userId)
+                .FirstOrDefaultAsync(ci => ci.CartItemId == cartItemId);
 
+            if (itemToUpdate == null)
+                return Json(new { success = false, message = "Không tìm thấy sản phẩm." });
+
+            int availableQuantity = itemToUpdate.Product.Inventory?.Quantity ?? 0;
+
+            if (quantity <= 0)
+                return Json(new { success = false, message = "Số lượng phải lớn hơn 0." });
+
+            if (quantity > availableQuantity)
+                return Json(new { success = false, message = $"Vượt quá tồn kho ({availableQuantity})." });
+
+            itemToUpdate.Quantity = quantity;
             await _context.SaveChangesAsync();
-            return RedirectToAction("Index");
-        }
 
-        // POST: Cart/Remove
-        [HttpPost]
-        public async Task<IActionResult> Remove(int cartItemId)
-        {
-            var cartItem = await _context.CartItems.FindAsync(cartItemId);
-            if (cartItem != null)
+            decimal itemTotal = (decimal)(itemToUpdate.Product.Price * itemToUpdate.Quantity);
+            decimal totalCart = await _context.CartItems
+                .Where(ci => ci.Cart.UserId == userId)
+                .SumAsync(ci => (decimal)(ci.Product.Price * ci.Quantity));
+
+            return Json(new
             {
-                _context.CartItems.Remove(cartItem);
-                await _context.SaveChangesAsync();
-                TempData["SuccessMessage"] = "🗑️ Đã xóa sản phẩm khỏi giỏ.";
-            }
-            return RedirectToAction("Index");
+                success = true,
+                itemTotal = itemTotal.ToString("N0") + " ₫",
+                cartTotal = totalCart.ToString("N0") + " ₫"
+            });
         }
     }
 }
