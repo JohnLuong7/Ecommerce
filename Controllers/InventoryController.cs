@@ -4,6 +4,9 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using System.Threading.Tasks;
+using System.Linq; // Cần cho SelectMany và ToList
+using System.Collections.Generic; // Cần cho List<Product>
+using System; // Cần cho Guid/Console.WriteLine nếu cần debug
 
 namespace Ecommerce.Controllers
 {
@@ -16,19 +19,28 @@ namespace Ecommerce.Controllers
             _context = context;
         }
 
+        // Phương thức trợ giúp để đảm bảo danh sách Products không bao giờ null
+        private async Task<List<Product>> GetProductsSafeAsync()
+        {
+            // Sử dụng ?? new List<Product>() để đảm bảo trả về List<Product> rỗng nếu Products là null
+            return await _context.Products?.ToListAsync() ?? new List<Product>();
+        }
+
+
         // GET: Inventory
         public async Task<IActionResult> Index()
         {
             var inventories = await _context.Inventory
-                                   .Include(i => i.Product)
-                                   .ToListAsync();
+                                       .Include(i => i.Product)
+                                       .ToListAsync();
             return View(inventories);
         }
 
         // GET: Inventory/Create
-        public IActionResult Create()
+        public async Task<IActionResult> Create()
         {
-            ViewData["Products"] = new SelectList(_context.Products, "ProductId", "Name");
+            // SỬA: Dùng phương thức an toàn để tránh ArgumentNullException
+            ViewData["Products"] = new SelectList(await GetProductsSafeAsync(), "ProductId", "Name");
             return View();
         }
 
@@ -43,7 +55,9 @@ namespace Ecommerce.Controllers
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["Products"] = new SelectList(_context.Products, "ProductId", "Name", inventory.ProductId);
+
+            // SỬA: Dùng phương thức an toàn khi quay lại View do lỗi
+            ViewData["Products"] = new SelectList(await GetProductsSafeAsync(), "ProductId", "Name", inventory.ProductId);
             return View(inventory);
         }
 
@@ -55,7 +69,8 @@ namespace Ecommerce.Controllers
             var inventory = await _context.Inventory.FindAsync(id);
             if (inventory == null) return NotFound();
 
-            ViewData["Products"] = new SelectList(_context.Products, "ProductId", "Name", inventory.ProductId);
+            // SỬA: Dùng phương thức an toàn để tránh ArgumentNullException
+            ViewData["Products"] = new SelectList(await GetProductsSafeAsync(), "ProductId", "Name", inventory.ProductId);
             return View(inventory);
         }
 
@@ -64,6 +79,8 @@ namespace Ecommerce.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, Inventory inventory)
         {
+            if (id != inventory.InventoryId) return NotFound();
+
             if (!ModelState.IsValid)
             {
                 var errors = ModelState.Values
@@ -73,23 +90,19 @@ namespace Ecommerce.Controllers
 
                 ViewBag.Errors = errors;
 
-                ViewData["Categories"] = _context.Categories.ToList(); // hoặc ViewBag, tùy bạn
+                // SỬA: Dùng phương thức an toàn khi quay lại View do lỗi
+                ViewData["Products"] = new SelectList(await GetProductsSafeAsync(), "ProductId", "Name", inventory.ProductId);
 
-                return View(inventory); // hoặc model tương ứng
+                return View(inventory);
             }
-
 
             if (ModelState.IsValid)
             {
                 try
                 {
-                    var existingInventory = await _context.Inventory.FindAsync(id);
-                    if (existingInventory == null) return NotFound();
-
-                    // Gán từng trường cần cập nhật
-                    existingInventory.ProductId = inventory.ProductId;
-                    existingInventory.Quantity = inventory.Quantity;
-
+                    // === LOGIC CẬP NHẬT TỐT HƠN ===
+                    // Gắn đối tượng Inventory được bind từ form vào context
+                    _context.Update(inventory);
                     await _context.SaveChangesAsync();
                 }
                 catch (DbUpdateConcurrencyException)
@@ -101,7 +114,9 @@ namespace Ecommerce.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["Products"] = new SelectList(_context.Products, "ProductId", "Name", inventory.ProductId);
+
+            // SỬA: Dùng phương thức an toàn
+            ViewData["Products"] = new SelectList(await GetProductsSafeAsync(), "ProductId", "Name", inventory.ProductId);
             return View(inventory);
         }
 
@@ -112,8 +127,8 @@ namespace Ecommerce.Controllers
             if (id == null) return NotFound();
 
             var inventory = await _context.Inventory
-                                    .Include(i => i.Product)
-                                    .FirstOrDefaultAsync(m => m.InventoryId == id);
+                                         .Include(i => i.Product)
+                                         .FirstOrDefaultAsync(m => m.InventoryId == id);
 
             if (inventory == null) return NotFound();
 

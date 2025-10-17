@@ -1,120 +1,797 @@
-﻿@model Ecommerce.Models.Product
-@using Microsoft.AspNetCore.Mvc.Rendering
+﻿@model Ecommerce.ViewModels.EditProductViewModel
+@inject Microsoft.AspNetCore.Hosting.IWebHostEnvironment WebHostEnvironment
 
 @{
-    ViewData["Title"] = "Edit Product";
-    // Ép kiểu categories một cách an toàn hơn
-    var categories = ViewData["Categories"] as List<Ecommerce.Models.Category>;
+    ViewData["Title"] = "Chỉnh Sửa Sản Phẩm";
 }
 
-<h2>Chỉnh Sửa Sản Phẩm: @Model.Name</h2>
+<div class="row">
+    <div class="col-md-10 offset-md-1">
+        <h2 class="text-center mb-4">Chỉnh Sửa Sản Phẩm: @Model.Name</h2>
 
-@* SỬA: Thêm enctype="multipart/form-data" để xử lý upload file *@
-<form asp-action="Edit" method="post" enctype="multipart/form-data">
-    <input type="hidden" asp-for="ProductId" />
-    @* Giữ lại các trường JSON/DateTime ẩn nếu chúng không được hiển thị/chỉnh sửa *@
-    <input type="hidden" asp-for="CreatedDate" />
-    <input type="hidden" asp-for="VariantsJson" />
-    <input type="hidden" asp-for="ColorsJson" />
-    <input type="hidden" asp-for="PromotionsJson" />
-    <input type="hidden" asp-for="OfferBannerJson" />
-    <input type="hidden" asp-for="SpecsJson" />
-    <input type="hidden" asp-for="CommitmentsJson" />
-    <input type="hidden" asp-for="OriginalPrice" />
+        <form asp-action="Edit" method="post" enctype="multipart/form-data">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
+            <input type="hidden" asp-for="ProductId" />
 
-    <div class="form-group mb-3">
-        <label asp-for="Name" class="form-label"></label>
-        <input asp-for="Name" class="form-control" />
-        <span asp-validation-for="Name" class="text-danger"></span>
-    </div>
+            <div class="card mb-4 shadow-sm">
 
-    <div class="form-group mb-3">
-        <label asp-for="ShortDescription" class="form-label"></label>
-        <input asp-for="ShortDescription" class="form-control" />
-        <span asp-validation-for="ShortDescription" class="text-danger"></span>
-    </div>
-
-    <div class="form-group mb-3">
-        <label asp-for="Description" class="form-label"></label>
-        <textarea asp-for="Description" class="form-control"></textarea>
-        <span asp-validation-for="Description" class="text-danger"></span>
-    </div>
-
-    <div class="form-group mb-3">
-        <label asp-for="Price" class="form-label"></label>
-        <input asp-for="Price" class="form-control" type="number" step="1" />
-        <span asp-validation-for="Price" class="text-danger"></span>
-    </div>
-
-    <div class="form-group mb-3">
-        <label asp-for="Sku" class="form-label"></label> @* SỬA LỖI CS1061 *@
-        <input asp-for="Sku" class="form-control" /> @* SỬA LỖI CS1061 *@
-        <span asp-validation-for="Sku" class="text-danger"></span> @* SỬA LỖI CS1061 *@
-    </div>
-
-    @* THÊM TRƯỜNG CẬP NHẬT TỒN KHO *@@* (quantity) *@
-    <div class="form-group mb-3">
-        <label for="quantity" class="form-label">Số lượng Tồn kho</label>
-        <input type="number" id="quantity" name="quantity" class="form-control"
-               value="@(Model.Inventory?.Quantity ?? 0)" required min="0" />
-    </div>
-
-    <div class="form-group mb-3 form-check">
-        <input asp-for="IsPublished" class="form-check-input" />
-        <label asp-for="IsPublished" class="form-check-label"></label>
-        <span asp-validation-for="IsPublished" class="text-danger"></span>
-    </div>
-
-    <div class="form-group mb-3">
-        <label asp-for="CategoryId" class="form-label"></label>
-        <select asp-for="CategoryId" class="form-select" asp-items="@(new SelectList(categories, "CategoryId", "Name", Model.CategoryId))">
-            <option value="">-- Select Category --</option>
-        </select>
-        <span asp-validation-for="CategoryId" class="text-danger"></span>
-    </div>
-
-    <div class="form-group mb-3">
-        <label for="newImages">Upload Additional Images</label>
-        <input type="file" name="newImages" id="newImages" multiple class="form-control" />
-    </div>
-
-    <h4>Existing Images (@(Model.ProductImages?.Count ?? 0))</h4>
-    <div>
-        @if (Model.ProductImages != null && Model.ProductImages.Any())
-        {
-            foreach (var img in Model.ProductImages)
-            {
-                <div style="display:inline-block; margin:10px; position:relative;">
-                    <img src="@Url.Content("~/images/" + img.FileName)" alt="Product Image" style="max-width:150px;" />
-                    @* Thêm chỉ báo ảnh chính *@
-                    @if (img.IsMain)
-                    {
-                        <span class="badge bg-primary" style="position:absolute; bottom:0; left:0;">Main</span>
-                    }
-
-                    <form asp-action="DeleteImage" method="post" style="position:absolute; top:5px; right:5px;">
-                        <input type="hidden" name="imageId" value="@img.ProductImageId" />
-                        <button type="submit" class="btn btn-sm btn-danger" title="Delete image"
-                                onclick="return confirm('Are you sure you want to delete this image?');">
-                            X
-                        </button>
-                    </form>
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Thông Tin Cơ Bản</h5>
                 </div>
-            }
-        }
-        else
-        {
-            <p>No images uploaded yet.</p>
-        }
+                <div class="card-body">
+                    <div class="row">
+
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label asp-for="Name" class="control-label"></label>
+
+                                <input asp-for="Name" class="form-control" />
+                                <span asp-validation-for="Name" class="text-danger"></span>
+                            </div>
+
+                            <div class="form-group mb-3">
+                                <label asp-for="CategoryId" class="control-label">Danh mục</label>
+                                <select asp-for="CategoryId" class="form-control" asp-items="ViewBag.Categories"></select>
+
+                                <span asp-validation-for="CategoryId" class="text-danger"></span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+
+                            <div class="form-group mb-3">
+                                <label asp-for="SKU" class="control-label"></label>
+                                <input asp-for="SKU" class="form-control" />
+
+                                <span asp-validation-for="SKU" class="text-danger"></span>
+                            </div>
+                            <div class="form-group mb-3 form-check">
+
+                                <input class="form-check-input" asp-for="IsPublished" />
+                                <label class="form-check-label" asp-for="IsPublished"></label>
+                            </div>
+
+                        </div>
+                    </div>
+                    <div class="form-group mb-3">
+                        <label asp-for="ShortDescription" class="control-label"></label>
+                        <textarea asp-for="ShortDescription" class="form-control" rows="3"></textarea>
+
+                        <span asp-validation-for="ShortDescription" class="text-danger"></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mb-4 shadow-sm">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">Giá & Tồn Kho</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-group mb-3">
+                                <label asp-for="Price" class="control-label">Giá niêm yết</label>
+
+                                <input asp-for="Price" class="form-control" type="number" step="0.01" min="0.01" />
+                                <span asp-validation-for="Price" class="text-danger"></span>
+                            </div>
+
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group mb-3">
+
+                                <label asp-for="SalePrice" class="control-label">Giá khuyến mãi (Tùy chọn)</label>
+                                <input asp-for="SalePrice" class="form-control" type="number" step="0.01" min="0" />
+                                <span asp-validation-for="SalePrice" class="text-danger"></span>
+
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group mb-3">
+
+                                <label asp-for="Quantity" class="control-label">Số lượng tồn kho</label>
+                                <input asp-for="Quantity" class="form-control" type="number" min="0" />
+                                <span asp-validation-for="Quantity" class="text-danger"></span>
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+            <div class="card mb-4 shadow-sm">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="mb-0">Quản Lý Ảnh Sản Phẩm</h5>
+                </div>
+
+                <div class="card-body">
+                    <div class="form-group mb-4">
+                        <label class="control-label">Ảnh Sản Phẩm Đã Có</label>
+                        <div id="existing-images-container">
+
+                            @if (Model.ExistingImages != null && Model.ExistingImages.Any())
+                            {
+                                foreach (var image in Model.ExistingImages)
+
+                                {
+                                    var imageUrl = Url.Content($"~/images/{image.ImageUrl}");
+                                    <div class="image-card-wrapper existing-image @(image.IsPrimary ? "is-primary" : "")"
+                                         data-image-id="@image.ImageId" data-image-url="@image.ImageUrl">
+
+                                        @if (image.IsPrimary)
+                                        {
+
+                                            <span class="primary-badge" id="primary-label-@image.ImageId">Ảnh Chính</span>
+                                        }
+
+
+                                        <img src="@imageUrl" alt="Ảnh sản phẩm" class="img-thumbnail" onerror="this.onerror=null;this.src='/images/placeholder.png';" />
+
+                                        <div class="image-overlay">
+                                            <button type="button" class="delete-btn"
+                                                    onclick="deleteImage(@image.ImageId, @Model.ProductId)">
+
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+
+
+                                            <button type="button" class="set-primary-btn"
+                                                    onclick="setMainImage(@image.ImageId, @Model.ProductId)"
+                                                    style="@(image.IsPrimary ? "display:none;" : "")">
+
+                                                <i class="fas fa-star"></i> Đặt làm Ảnh Chính
+                                            </button>
+
+                                        </div>
+                                    </div>
+                                }
+
+                            }
+                            else
+                            {
+
+                                <p class="text-muted" id="no-image-text">Sản phẩm này chưa có ảnh nào.</p>
+                            }
+                        </div>
+                    </div>
+
+
+                    <hr />
+
+                    <div class="form-group mb-3">
+                        <label asp-for="Images" class="control-label">Chọn Ảnh Mới (Tải lên)</label>
+
+                        <div class="input-group">
+                            <input asp-for="Images" id="new-images-input" type="file" class="d-none" multiple accept="image/*" />
+
+
+                            <input type="text" class="form-control" id="file-display-input" readonly placeholder="Chọn tệp để tải lên..." />
+
+                            <button type="button" class="btn btn-outline-secondary" id="choose-file-btn">
+                                <i class="fas fa-folder-open"></i> Chọn tệp
+                            </button>
+
+                        </div>
+                        <span asp-validation-for="Images" class="text-danger"></span>
+                        <small class="form-text text-muted">Có thể chọn nhiều file ảnh cùng lúc.</small>
+                    </div>
+
+
+                    <div class="mt-3">
+                        <label class="control-label">Ảnh Mới Sẽ Tải Lên:</label>
+
+                        <div id="new-images-preview-container" class="image-preview-container">
+                            <p class="text-muted" id="no-new-image-text">Chưa có ảnh mới nào được chọn.</p>
+                        </div>
+
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="card mb-4 shadow-sm">
+                <div class="card-header
+bg-primary text-white">
+                    <h5 class="mb-0">Mô Tả Chi Tiết Sản Phẩm</h5>
+                </div>
+                <div class="card-body">
+                    <div class="form-group mb-3">
+
+                        <label asp-for="Description" class="control-label"></label>
+                        <textarea asp-for="Description" class="form-control" rows="5"></textarea>
+                        <span asp-validation-for="Description" class="text-danger"></span>
+                    </div>
+
+
+                    <h6 class="mt-4">Đặc Tả Kỹ Thuật (Sẽ được lưu dưới dạng JSON)</h6>
+                    <div id="specification-groups-container" class="border p-3 rounded">
+                    </div>
+                    <button type="button" class="btn btn-outline-success btn-sm mt-3" id="add-spec-group-btn">Thêm Nhóm Đặc Tả</button>
+
+                    <h6 class="mt-4">
+                        Khối Nội Dung
+                        Chi Tiết (Sẽ được lưu dưới dạng JSON)
+                    </h6>
+                    <div id="detail-content-container" class="border p-3 rounded">
+                    </div>
+
+                    <button type="button" class="btn btn-outline-success btn-sm mt-3" id="add-detail-block-btn">Thêm Khối Nội Dung</button>
+                </div>
+            </div>
+
+            <div class="form-group text-center mt-4">
+                <button type="submit" class="btn btn-primary btn-lg me-2"><i class="fas fa-save"></i> Lưu Thay Đổi</button>
+                <a asp-controller="Products" asp-action="Index" class="btn btn-secondary btn-lg">
+                    <i class="fas fa-list"></i> Trở Về Danh Sách
+                </a>
+
+            </div>
+        </form>
     </div>
-
-    <hr />
-
-    <button type="submit" class="btn btn-primary">Save Changes</button>
-    <a asp-action="Index" class="btn btn-secondary">Back to List</a>
-</form>
+</div>
 
 @section Scripts {
-    <partial name="_ValidationScriptsPartial" />
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/js/all.min.js"></script>
+
+    <script>
+        const productId = @Model.ProductId;
+        let newFilesList = []; // Mảng chứa các File object mới được chọn
+
+        // =========================================================================
+        // CSS INLINE CHO PHẦN QUẢN LÝ ẢNH (ĐÃ GIẢM KÍCH THƯỚC ẢNH VÀ CĂN NÚT CHÍNH VÀO GIỮA)
+        // =========================================================================
+        $(document).ready(function() {
+            // Apply inline styles for image management
+            $('head').append(`
+            <style>
+                #existing-images-container, #new-images-preview-container {
+                    display: flex;
+                    flex-wrap: wrap;
+                    gap: 10px;
+                    padding: 10px;
+                    border: 1px solid #dee2e6;
+                    border-radius: .25rem;
+                    background-color: #f8f9fa;
+                    min-height: 100px;
+                }
+
+                .image-card-wrapper {
+                    position: relative;
+                    width: 80px; /* KÍCH THƯỚC BÉ LẠI */
+                    height: 80px; /* KÍCH THƯỚC BÉ LẠI */
+                    overflow: hidden;
+                    border: 3px solid #ccc;
+                    border-radius: 5px;
+                    transition: all 0.2s;
+                    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                    margin: 0;
+                }
+
+                .image-card-wrapper.is-primary {
+                    border-color: #28a745;
+                    box-shadow: 0 0 10px rgba(40, 167, 69, 0.5);
+                }
+
+                .image-card-wrapper img {
+                    width: 100%;
+                    height: 100%;
+                    object-fit: cover;
+                    display: block;
+                }
+
+                .primary-badge {
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    background: #28a745;
+                    color: white;
+                    padding: 1px 4px;
+                    font-size: 8px;
+                    font-weight: bold;
+                    border-bottom-right-radius: 3px;
+                    z-index: 10;
+                }
+
+                .image-overlay {
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    background: rgba(0, 0, 0, 0.6);
+                    display: flex;
+                    flex-direction: column;
+                    justify-content: center; /* CĂN NÚT CHÍNH VÀO GIỮA */
+                    align-items: center;
+                    opacity: 0;
+                    transition: opacity 0.3s;
+                    padding: 3px;
+                }
+
+                .image-card-wrapper:hover .image-overlay {
+                    opacity: 1;
+                }
+
+                /* Nút Xóa (Góc trên bên phải) */
+                .delete-btn {
+                    position: absolute;
+                    top: 3px;
+                    right: 3px;
+                    background: #dc3545;
+                    color: white;
+                    border: none;
+                    border-radius: 50%;
+                    width: 20px;
+                    height: 20px;
+                    font-size: 10px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    cursor: pointer;
+                    z-index: 15;
+                }
+
+                .delete-btn i {
+                    font-size: 8px;
+                }
+
+                /* Nút Đặt làm ảnh chính (Căn giữa) */
+                .set-primary-btn {
+                    background: #ffc107;
+                    color: #333;
+                    border: none;
+                    padding: 4px 6px; /* Tăng padding để dễ bấm hơn */
+                    border-radius: 3px;
+                    cursor: pointer;
+                    font-size: 9px;
+                    /* Đã bỏ margin-top: auto để nó nằm ở giữa theo justify-content: center */
+                    white-space: nowrap;
+                    margin-top: 0;
+                }
+            </style>
+            `);
+            // Khởi tạo JSON data
+            loadJsonData();
+            // Khởi tạo sự kiện cho input file mới
+            setupNewFileInputListener();
+            // Gắn sự kiện click cho nút "Chọn tệp"
+            $('#choose-file-btn').on('click', function() {
+                $('#new-images-input').trigger('click');
+            });
+        });
+
+        // =========================================================================
+        // LOGIC QUẢN LÝ ẢNH MỚI TẢI LÊN (ĐÃ KHẮC PHỤC LỖI KHÔNG TẢI LÊN ĐƯỢC)
+        // =========================================================================
+
+        // Hàm cập nhật FileList cho input file ẩn
+        function updateFileInput() {
+            const dataTransfer = new DataTransfer();
+            newFilesList.forEach(file => dataTransfer.items.add(file));
+            $('#new-images-input')[0].files = dataTransfer.files;
+
+            const fileCount = newFilesList.length;
+            const $fileDisplay = $('#file-display-input');
+            if (fileCount > 0) {
+                if (fileCount === 1) {
+                    $fileDisplay.val(newFilesList[0].name);
+                } else {
+                    $fileDisplay.val(`${fileCount} tệp đã được chọn`);
+                }
+                $('#no-new-image-text').hide();
+            } else {
+                $fileDisplay.val('');
+                $('#no-new-image-text').show();
+            }
+        }
+
+        // Hàm tạo HTML cho ảnh mới
+        function renderNewImageCard(file, index, isPrimary = false) {
+            const tempUrl = URL.createObjectURL(file);
+            const primaryClass = isPrimary ? 'is-primary' : '';
+            const primaryBadge = isPrimary ? '<span class="primary-badge" id="primary-label-new">Ảnh Chính</span>' : '';
+            const setPrimaryStyle = isPrimary ? "display:none;" : "";
+
+            return `
+                <div class="image-card-wrapper new-image ${primaryClass}" data-file-name="${file.name}" data-new-img-index="${index}">
+                    ${primaryBadge}
+                    <img src="${tempUrl}" alt="${file.name}" class="img-thumbnail" />
+
+                    <div class="image-overlay">
+                        <button type="button" class="delete-btn" onclick="deleteNewImage('${file.name}')">
+                            <i class="fas fa-trash"></i>
+                        </button>
+
+                        <button type="button" class="set-primary-btn" onclick="setNewMainImage('${file.name}')" style="${setPrimaryStyle}">
+                            <i class="fas fa-star"></i> Ảnh Chính
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Hàm vẽ lại toàn bộ khu vực preview ảnh mới
+        function reRenderNewImagesPreview() {
+            const $previewContainer = $('#new-images-preview-container');
+            $previewContainer.empty();
+
+            if (newFilesList.length === 0) {
+                $('#no-new-image-text').show();
+                if ($('#PrimaryImageUrl').val()?.startsWith('NEW_FILE:')) {
+                     $('#PrimaryImageUrl').val('');
+                }
+                return;
+            }
+
+            $('#no-new-image-text').hide();
+
+            const currentPrimaryFile = $('#PrimaryImageUrl').val()?.replace('NEW_FILE:', '');
+            newFilesList.forEach((file, index) => {
+                const isPrimary = file.name === currentPrimaryFile;
+                $previewContainer.append(renderNewImageCard(file, index, isPrimary));
+            });
+            updateFileInput();
+        }
+
+
+        function setupNewFileInputListener() {
+            $('#new-images-input').on('change', function() {
+                const newFiles = Array.from(this.files || []);
+                if (newFiles.length === 0) return;
+
+                // Thêm các file mới vào mảng tổng
+                newFilesList = [...newFilesList, ...newFiles];
+
+                // Cập nhật và vẽ lại toàn bộ
+                reRenderNewImagesPreview();
+
+                // Nếu không có ảnh cũ nào là ảnh chính VÀ không có ảnh mới nào đang là chính tạm thời
+                if ($('#existing-images-container').children('.is-primary').length === 0 && !$('#PrimaryImageUrl').val()?.startsWith('NEW_FILE:')) {
+                    // Tự động đặt file mới đầu tiên làm ảnh chính tạm thời
+                    setNewMainImage(newFiles[0].name);
+                }
+
+                // KHẮC PHỤC LỖI TẢI ẢNH MỚI LÊN LẦN SAU
+                this.value = '';
+            });
+        }
+
+        // Xóa tạm thời ảnh mới khỏi danh sách upload
+        function deleteNewImage(fileName) {
+            if (!confirm(`Bạn có chắc chắn muốn xóa tạm thời tệp "${fileName}" này khỏi danh sách tải lên không?`)) {
+                return;
+            }
+
+            const initialLength = newFilesList.length;
+            newFilesList = newFilesList.filter(file => file.name !== fileName);
+            if (newFilesList.length === initialLength) {
+                console.error("Lỗi: Không tìm thấy file để xóa.");
+                return;
+            }
+
+            const wasPrimary = $('#PrimaryImageUrl').val() === 'NEW_FILE:' + fileName;
+            if (wasPrimary) {
+                if (newFilesList.length > 0) {
+                    setNewMainImage(newFilesList[0].name);
+                } else {
+                    if ($('.image-card-wrapper.existing-image.is-primary').length === 0) {
+                         $('#PrimaryImageUrl').val('');
+                    }
+                }
+            }
+            reRenderNewImagesPreview();
+        }
+
+        // Đặt ảnh mới làm ảnh chính TẠM THỜI
+        function setNewMainImage(fileName) {
+            // 1. Reset trạng thái cũ trên tất cả các thẻ ảnh CŨ và MỚI
+            $('.image-card-wrapper').removeClass('is-primary');
+            $('.primary-badge').remove();
+
+            // Hiển thị lại tất cả các nút Đặt làm Ảnh Chính
+            $('.set-primary-btn').css('display', 'block').prop('disabled', false);
+            // 2. Cập nhật hidden field cho PrimaryImageUrl (Sử dụng tên file TẠM THỜI)
+            $('#PrimaryImageUrl').val('NEW_FILE:' + fileName);
+            // 3. Cập nhật UI cho ảnh mới được chọn
+            const $newMainCard = $(`.image-card-wrapper.new-image[data-file-name="${fileName}"]`);
+            if ($newMainCard.length) {
+                 $newMainCard.addClass('is-primary');
+                 $newMainCard.prepend('<span class="primary-badge" id="primary-label-new">Ảnh Chính</span>');
+                 $newMainCard.find('.set-primary-btn').css('display', 'none').prop('disabled', true);
+            }
+        }
+
+
+        // =========================================================================
+        // AJAX: XÓA ẢNH CŨ (ĐÃ KHẮC PHỤC LỖI)
+        // =========================================================================
+        function deleteImage(imageId, productId) {
+            if (!confirm("Bạn có chắc chắn muốn xóa ảnh này không? Hành động này không thể hoàn tác.")) {
+                return;
+            }
+
+            console.log("Đang gửi yêu cầu xóa ảnh ID:", imageId);
+            $.ajax({
+                url: '@Url.Action("DeleteImage", "ProductEdit")',
+                type: 'POST',
+                data: { imageId: imageId, productId: productId, __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val() },
+                success: function(response) {
+                    if (response.success) {
+                        $(`.image-card-wrapper[data-image-id="${imageId}"]`).remove();
+
+                        // Cập nhật văn bản "Sản phẩm này chưa có ảnh nào."
+                        if ($('#existing-images-container').children('.image-card-wrapper').length === 0) {
+                            $('#no-image-text').remove();
+                            $('#existing-images-container').append('<p class="text-muted" id="no-image-text">Sản phẩm này chưa có ảnh nào.</p>');
+                        }
+
+                        // Xử lý logic ảnh chính sau khi xóa
+                        if (response.isPrimaryRemoved) {
+                            // 1. Reset tất cả UI (cả ảnh mới)
+                            $('.image-card-wrapper').removeClass('is-primary');
+                            $('.primary-badge').remove();
+                            $('.set-primary-btn').css('display', 'block').prop('disabled', false);
+
+                            if(response.newPrimaryId) {
+                                // 2a. Cập nhật ảnh chính mới (ảnh cũ còn lại, do backend set)
+                                const newPrimaryId = response.newPrimaryId;
+                                const $newMainCard = $(`.image-card-wrapper[data-image-id="${newPrimaryId}"]`);
+                                $newMainCard.addClass('is-primary');
+                                $newMainCard.prepend('<span class="primary-badge" id="primary-label-' + newPrimaryId + '">Ảnh Chính</span>');
+                                $newMainCard.find('.set-primary-btn').css('display', 'none').prop('disabled', true);
+                                // Cập nhật PrimaryImageUrl hidden field
+                                $('#PrimaryImageUrl').val($newMainCard.data('image-url'));
+                            } else if (newFilesList.length > 0) {
+                                // 2b. Nếu không còn ảnh cũ nào là chính, nhưng có ảnh mới, đặt ảnh mới đầu tiên làm chính tạm thời
+                                setNewMainImage(newFilesList[0].name);
+                            } else {
+                                // 2c. Không còn ảnh nào (cũ/mới) là ảnh chính
+                                $('#PrimaryImageUrl').val('');
+                            }
+                        }
+
+                    } else {
+                        console.error("Lỗi xóa ảnh:", response.message);
+                        alert("Lỗi: " + response.message);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error("Lỗi hệ thống khi xóa ảnh. XHR Status:", status, "Error:", error, "Response:", xhr.responseText);
+                    alert("Lỗi hệ thống khi xóa ảnh. Vui lòng kiểm tra console: " + error);
+                }
+            });
+        }
+
+        // =========================================================================
+        // AJAX: ĐẶT LÀM ẢNH CHÍNH (ĐÃ KHẮC PHỤC LỖI)
+        // =========================================================================
+        function setMainImage(imageId, productId) {
+            console.log("Đang gửi yêu cầu đặt ảnh chính ID:", imageId);
+            $.ajax({
+                url: '@Url.Action("SetMainImage", "ProductEdit")',
+                type: 'POST',
+                data: { imageId: imageId, productId: productId, __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val() },
+                success: function(response) {
+                    if (response.success) {
+                        // 1. Reset trạng thái cũ trên tất cả các thẻ ảnh (cả ảnh mới và cũ)
+                        $('.image-card-wrapper').removeClass('is-primary');
+                        $('.primary-badge').remove();
+                        $('.set-primary-btn').css('display', 'block').prop('disabled', false);
+
+                        // 2. Cập nhật trạng thái ảnh chính mới (ảnh cũ)
+                        const $newMainCard = $(`.image-card-wrapper[data-image-id="${imageId}"]`);
+                        $newMainCard.addClass('is-primary');
+
+                        $newMainCard.prepend('<span class="primary-badge" id="primary-label-' + imageId + '">Ảnh Chính</span>');
+                        $newMainCard.find('.set-primary-btn').css('display', 'none').prop('disabled', true);
+
+                        // 3. Cập nhật PrimaryImageUrl hidden field
+                        $('#PrimaryImageUrl').val($newMainCard.data('image-url'));
+
+                    } else {
+                        console.error("Lỗi đặt ảnh chính:", response.message);
+                        alert("Lỗi: " + response.message);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error("Lỗi hệ thống khi đặt ảnh chính. XHR Status:", status, "Error:", error, "Response:", xhr.responseText);
+                    alert("Lỗi hệ thống khi đặt ảnh chính. Vui lòng kiểm tra console: " + error);
+                }
+            });
+        }
+
+        // =========================================================================
+        // LOGIC QUẢN LÝ JSON DỮ LIỆU ĐẶC TẢ VÀ NỘI DUNG CHI TIẾT (Giữ nguyên)
+        // =========================================================================
+        function generateUniqueId() {
+            return '_' + Math.random().toString(36).substr(2, 9);
+        }
+
+        // --- Specification Logic ---
+        const specContainer = $('#specification-groups-container');
+        const specInput = $('#Specifications');
+
+        $('#add-spec-group-btn').on('click', () => addSpecGroup());
+
+        function renderSpecGroup(group, index) {
+            const groupId = generateUniqueId();
+            const groupHtml = `
+                <div class="card card-body mb-3 bg-light spec-group" data-group-id="${groupId}" data-group-index="${index}">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <input type="text" class="form-control form-control-sm spec-group-title"
+                            value="${group.GroupTitle}" placeholder="Tiêu đề nhóm"
+                            name="SpecificationGroups[${index}].GroupTitle" required />
+                        <button type="button" class="btn btn-danger btn-sm ms-2 remove-spec-group-btn">Xóa Nhóm</button>
+                    </div>
+
+                    <div class="spec-items-container ps-3">
+                        ${group.Specifications.map((item, itemIndex) => renderSpecItem(item, index, itemIndex)).join('')}
+                    </div>
+                    <button type="button" class="btn btn-outline-info btn-sm mt-2 add-spec-item-btn">Thêm Mục Đặc Tả</button>
+
+                </div>
+            `;
+            return groupHtml;
+        }
+
+        function renderSpecItem(item, groupIndex, itemIndex) {
+            const itemId = generateUniqueId();
+            return `
+                <div class="input-group input-group-sm mb-2 spec-item" data-item-id="${itemId}">
+                    <input type="text" class="form-control spec-item-key" placeholder="Khóa (Ví dụ: CPU)"
+                        value="${item.Key}" name="SpecificationGroups[${groupIndex}].Specifications[${itemIndex}].Key" required />
+                    <input
+                        type="text" class="form-control spec-item-value" placeholder="Giá trị (Ví dụ: Core i7)"
+                        value="${item.Value}" name="SpecificationGroups[${groupIndex}].Specifications[${itemIndex}].Value" required />
+                    <button type="button" class="btn btn-outline-danger remove-spec-item-btn">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            `;
+        }
+
+        function addSpecGroup(group = { GroupTitle: '', Specifications: [] }) {
+            const newIndex = specContainer.children('.spec-group').length;
+            specContainer.append(renderSpecGroup(group, newIndex));
+            updateSpecIndices();
+        }
+
+        function addSpecItem(groupElement, item = { Key: '', Value: '' }) {
+            const specItemsContainer = groupElement.find('.spec-items-container');
+            const groupIndex = parseInt(groupElement.attr('data-group-index'));
+            const newIndex = specItemsContainer.children('.spec-item').length;
+            specItemsContainer.append(renderSpecItem(item, groupIndex, newIndex));
+            updateSpecIndices();
+        }
+
+        function updateSpecIndices() {
+            specContainer.children('.spec-group').each(function(groupIndex) {
+                const $group = $(this);
+                $group.attr('data-group-index', groupIndex);
+
+                $group.find('.spec-group-title').attr('name', `SpecificationGroups[${groupIndex}].GroupTitle`);
+
+                $group.find('.spec-items-container').children('.spec-item').each(function(itemIndex) {
+
+                    const $item = $(this);
+                    $item.find('.spec-item-key').attr('name', `SpecificationGroups[${groupIndex}].Specifications[${itemIndex}].Key`);
+                    $item.find('.spec-item-value').attr('name', `SpecificationGroups[${groupIndex}].Specifications[${itemIndex}].Value`);
+                });
+            });
+        }
+
+        specContainer.on('click', '.remove-spec-group-btn', function() {
+            $(this).closest('.spec-group').remove();
+            updateSpecIndices();
+        });
+        specContainer.on('click', '.add-spec-item-btn', function() {
+            addSpecItem($(this).closest('.spec-group'));
+        });
+        specContainer.on('click', '.remove-spec-item-btn', function() {
+            $(this).closest('.spec-item').remove();
+            updateSpecIndices();
+        });
+        // --- Detail Content Logic ---
+        const detailContainer = $('#detail-content-container');
+        const detailInput = $('#DetailContentJson');
+
+        $('#add-detail-block-btn').on('click', () => addDetailBlock());
+
+        function renderDetailBlock(block, index) {
+            const isText = block.BlockType === 'text';
+            const blockId = generateUniqueId();
+            const contentInput = isText
+                ?
+                `<textarea class="form-control detail-block-content" rows="4" placeholder="Nội dung văn bản" name="DetailContentBlocks[${index}].Content" required>${block.Content}</textarea>`
+                : `<input type="text" class="form-control detail-block-content" value="${block.Content}" placeholder="URL hình ảnh" name="DetailContentBlocks[${index}].Content" required />`;
+            const blockHtml = `
+                <div class="card card-body mb-3 bg-light detail-block" data-block-id="${blockId}" data-block-index="${index}">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <select class="form-select form-select-sm detail-block-type me-2" name="DetailContentBlocks[${index}].BlockType">
+
+                            <option value="text" ${isText ?
+                'selected' : ''}>Văn bản</option>
+                            <option value="image" ${!isText ?
+                'selected' : ''}>Hình ảnh (URL)</option>
+                        </select>
+                        <button type="button" class="btn btn-danger btn-sm remove-detail-block-btn">Xóa Khối</button>
+                    </div>
+                    ${contentInput}
+
+                </div>
+            `;
+            return blockHtml;
+        }
+
+        function addDetailBlock(block = { BlockType: 'text', Content: '' }) {
+            const newIndex = detailContainer.children('.detail-block').length;
+            detailContainer.append(renderDetailBlock(block, newIndex));
+            updateDetailIndices();
+        }
+
+        function updateDetailIndices() {
+            detailContainer.children('.detail-block').each(function(blockIndex) {
+                const $block = $(this);
+                $block.attr('data-block-index', blockIndex);
+
+                $block.find('.detail-block-type').attr('name', `DetailContentBlocks[${blockIndex}].BlockType`);
+                $block.find('.detail-block-content').attr('name', `DetailContentBlocks[${blockIndex}].Content`);
+
+            });
+        }
+        detailContainer.on('click', '.remove-detail-block-btn', function() {
+            $(this).closest('.detail-block').remove();
+            updateDetailIndices();
+        });
+        detailContainer.on('change', '.detail-block-type', function() {
+            const $block = $(this).closest('.detail-block');
+            const blockIndex = $block.attr('data-block-index');
+            const newType = $(this).val();
+            const currentContent = $block.find('.detail-block-content').val();
+
+            let newContentInput;
+
+            if (newType === 'text') {
+
+                newContentInput = `<textarea class="form-control detail-block-content" rows="4" placeholder="Nội dung văn bản" name="DetailContentBlocks[${blockIndex}].Content" required>${currentContent}</textarea>`;
+            } else {
+                newContentInput = `<input type="text" class="form-control detail-block-content" value="${currentContent}" placeholder="URL hình ảnh" name="DetailContentBlocks[${blockIndex}].Content" required />`;
+            }
+
+            $block.find('.detail-block-content').remove();
+            $(this).parent().after(newContentInput);
+
+        });
+
+        // --- Load existing data ---
+        function loadJsonData() {
+            try {
+                // Load Specifications
+                const existingSpecs = @Html.Raw(Json.Serialize(Model.SpecificationGroups));
+                if (existingSpecs && existingSpecs.length) {
+                    existingSpecs.forEach(addSpecGroup);
+                } else {
+                    addSpecGroup();
+                }
+
+                // Load Detail Content
+                const existingDetails = @Html.Raw(Json.Serialize(Model.DetailContentBlocks));
+                if (existingDetails && existingDetails.length) {
+                    existingDetails.forEach(addDetailBlock);
+                } else {
+                    addDetailBlock();
+                }
+            } catch (e) {
+                console.error("Lỗi khi tải dữ liệu JSON cũ:", e);
+                addSpecGroup();
+                addDetailBlock();
+            }
+        }
+    </script>
 }

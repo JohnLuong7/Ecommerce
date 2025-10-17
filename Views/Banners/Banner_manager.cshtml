@@ -1,0 +1,422 @@
+﻿<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản Lý Banner - CRUD Firebase/Firestore</title>
+    <!-- Tải Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Thiết lập font Inter -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f7f9fb;
+            color: #1e293b;
+        }
+    </style>
+    <!-- Tải các thư viện Firebase -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+        import { getFirestore, collection, onSnapshot, doc, addDoc, updateDoc, deleteDoc, setLogLevel, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+        // Bắt đầu cấu hình và khởi tạo Firebase
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+        if (Object.keys(firebaseConfig).length === 0) {
+            console.error("Lỗi: Không tìm thấy cấu hình Firebase.");
+            document.getElementById('app-container').innerHTML = `
+                <div class="p-6 bg-red-100 border border-red-400 text-red-700 rounded-lg max-w-lg mx-auto mt-10">
+                    <p class="font-bold">Lỗi Cấu Hình</p>
+                    <p>Không thể khởi tạo Firebase. Vui lòng kiểm tra cấu hình.</p>
+                </div>
+            `;
+            throw new Error("Firebase Config Missing");
+        }
+
+        // Khởi tạo Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+
+        // Bật log gỡ lỗi (tùy chọn)
+        // setLogLevel('debug');
+
+        let currentUserId = null;
+        let isAuthReady = false;
+
+        // Định nghĩa đường dẫn collection cho dữ liệu riêng tư (banners của người dùng hiện tại)
+        const getBannerCollectionRef = (userId) => {
+            return collection(db, `/artifacts/${appId}/users/${userId}/banners`);
+        };
+
+        // Hàm xác thực
+        const setupAuthAndFirestore = async () => {
+            try {
+                if (initialAuthToken) {
+                    await signInWithCustomToken(auth, initialAuthToken);
+                } else {
+                    await signInAnonymously(auth);
+                }
+            } catch (error) {
+                console.error("Lỗi xác thực Firebase:", error);
+            }
+        };
+
+        // Lắng nghe trạng thái xác thực
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                currentUserId = user.uid;
+                document.getElementById('user-id-display').textContent = `ID Người Dùng: ${currentUserId}`;
+                startBannerListener();
+            } else {
+                currentUserId = crypto.randomUUID(); // Dùng ID ngẫu nhiên nếu ẩn danh thất bại
+                document.getElementById('user-id-display').textContent = `ID Người Dùng Tạm Thời: ${currentUserId}`;
+                startBannerListener();
+            }
+            isAuthReady = true;
+        });
+
+        // Hàm hiển thị thông báo
+        const showMessage = (message, isError = false) => {
+            const msgBox = document.getElementById('message-box');
+            msgBox.textContent = message;
+            msgBox.className = `p-3 rounded-lg text-sm text-center transition-opacity duration-300 ${isError ? 'bg-red-500 text-white' : 'bg-green-500 text-white'} opacity-100`;
+            setTimeout(() => {
+                msgBox.className += ' opacity-0';
+            }, 3000);
+        };
+
+        // --- Chức năng CRUD Firestore ---
+
+        // Lắng nghe thay đổi dữ liệu (READ)
+        const startBannerListener = () => {
+            if (!currentUserId || !isAuthReady) return;
+
+            const bannersRef = getBannerCollectionRef(currentUserId);
+            // Lấy dữ liệu và sắp xếp theo trường 'order' (nếu có, không bắt buộc)
+            // Lưu ý: Không dùng orderBy() nếu không tạo index
+            // const q = query(bannersRef, orderBy('order', 'asc'));
+            const q = bannersRef;
+
+            onSnapshot(q, (snapshot) => {
+                const banners = [];
+                snapshot.forEach((doc) => {
+                    const data = doc.data();
+                    // Đảm bảo dữ liệu JSON được parse nếu bạn đã stringify nó khi lưu
+                    if (typeof data.content === 'string') {
+                        try {
+                            data.content = JSON.parse(data.content);
+                        } catch (e) {
+                            console.error("Lỗi parse JSON content:", e);
+                        }
+                    }
+                    banners.push({ id: doc.id, ...data });
+                });
+                renderBannerList(banners);
+            }, (error) => {
+                console.error("Lỗi lắng nghe Firestore:", error);
+                showMessage("Lỗi khi tải danh sách banner.", true);
+            });
+        };
+
+        // Hàm hiển thị danh sách banners
+        const renderBannerList = (banners) => {
+            const listElement = document.getElementById('banner-list');
+            listElement.innerHTML = ''; // Xóa nội dung cũ
+
+            if (banners.length === 0) {
+                listElement.innerHTML = '<p class="text-center text-gray-500 p-4">Chưa có banner nào được thêm.</p>';
+                return;
+            }
+
+            banners.forEach(banner => {
+                const item = document.createElement('li');
+                item.id = `banner-item-${banner.id}`;
+                item.className = 'bg-white p-4 rounded-lg shadow-md mb-3 flex flex-col md:flex-row justify-between items-start md:items-center space-y-3 md:space-y-0';
+
+                // Hiển thị nội dung banner
+                let imageUrl = banner.imageUrl || 'https://placehold.co/150x50/3b82f6/ffffff?text=Banner';
+                let title = banner.title || 'Banner Mới';
+                let link = banner.link || '#';
+                let order = banner.order || 0;
+
+                item.innerHTML = `
+                    <div class="flex items-center space-x-4 w-full md:w-3/5">
+                        <img src="${imageUrl}" alt="${title}" onerror="this.onerror=null;this.src='https://placehold.co/150x50/94a3b8/ffffff?text=Lỗi+Ảnh';" class="w-20 h-20 object-cover rounded-md flex-shrink-0 border border-gray-200" loading="lazy">
+                        <div class="flex-grow min-w-0">
+                            <h3 class="text-lg font-semibold truncate">${title}</h3>
+                            <p class="text-sm text-gray-500 truncate">Liên kết: <a href="${link}" target="_blank" class="text-blue-500 hover:text-blue-700">${link}</a></p>
+                            <span class="text-xs font-medium bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full mt-1 inline-block">Thứ tự: ${order}</span>
+                        </div>
+                    </div>
+                    <div class="flex space-x-2 flex-shrink-0 w-full md:w-auto mt-3 md:mt-0 justify-end">
+                        <button onclick="window.editBanner('${banner.id}', '${title}', '${imageUrl}', '${link}', ${order})"
+                                class="flex items-center justify-center p-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition duration-150 text-sm font-medium w-full md:w-auto">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                                <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zm-3.646 3.646l-4.243 4.243V17h5.656l4.242-4.243-5.657-5.656z" />
+                            </svg>
+                            Sửa
+                        </button>
+                        <button onclick="window.confirmDelete('${banner.id}')"
+                                class="flex items-center justify-center p-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition duration-150 text-sm font-medium w-full md:w-auto">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm4 0a1 1 0 10-2 0v6a1 1 0 102 0V8z" clip-rule="evenodd" />
+                            </svg>
+                            Xóa
+                        </button>
+                    </div>
+                `;
+                listElement.appendChild(item);
+            });
+        };
+
+        // Hàm Thêm Banner (CREATE)
+        const addBanner = async (title, imageUrl, link, order) => {
+            if (!currentUserId) {
+                showMessage("Lỗi: Người dùng chưa được xác thực.", true);
+                return;
+            }
+            try {
+                const docRef = await addDoc(getBannerCollectionRef(currentUserId), {
+                    title: title,
+                    imageUrl: imageUrl,
+                    link: link,
+                    order: parseInt(order) || 0,
+                    createdAt: new Date().toISOString(),
+                    // Lưu ý: Nếu dữ liệu phức tạp hơn, bạn nên dùng JSON.stringify(data)
+                });
+                showMessage("Đã thêm banner thành công!");
+                return docRef.id;
+            } catch (error) {
+                console.error("Lỗi khi thêm banner:", error);
+                showMessage("Lỗi khi thêm banner.", true);
+            }
+        };
+
+        // Hàm Cập Nhật Banner (UPDATE)
+        const updateBanner = async (id, title, imageUrl, link, order) => {
+            if (!currentUserId) {
+                showMessage("Lỗi: Người dùng chưa được xác thực.", true);
+                return;
+            }
+            try {
+                const bannerDocRef = doc(getBannerCollectionRef(currentUserId), id);
+                await updateDoc(bannerDocRef, {
+                    title: title,
+                    imageUrl: imageUrl,
+                    link: link,
+                    order: parseInt(order) || 0,
+                    updatedAt: new Date().toISOString()
+                });
+                showMessage("Đã cập nhật banner thành công!");
+            } catch (error) {
+                console.error("Lỗi khi cập nhật banner:", error);
+                showMessage("Lỗi khi cập nhật banner.", true);
+            }
+        };
+
+        // Hàm Xóa Banner (DELETE)
+        const deleteBanner = async (id) => {
+            if (!currentUserId) {
+                showMessage("Lỗi: Người dùng chưa được xác thực.", true);
+                return;
+            }
+            try {
+                const bannerDocRef = doc(getBannerCollectionRef(currentUserId), id);
+                await deleteDoc(bannerDocRef);
+                showMessage("Đã xóa banner thành công!");
+            } catch (error) {
+                console.error("Lỗi khi xóa banner:", error);
+                showMessage("Lỗi khi xóa banner.", true);
+            }
+        };
+
+
+        // --- Quản lý Modal và Form ---
+
+        let currentBannerId = null;
+
+        // Hàm mở/đóng modal
+        const toggleModal = (show = true) => {
+            const modal = document.getElementById('banner-modal');
+            if (show) {
+                modal.classList.remove('hidden');
+                setTimeout(() => { modal.classList.add('opacity-100', 'scale-100'); }, 10);
+            } else {
+                modal.classList.remove('opacity-100', 'scale-100');
+                setTimeout(() => { modal.classList.add('hidden'); }, 300);
+            }
+        };
+
+        // Mở modal để thêm banner mới
+        window.openAddModal = () => {
+            currentBannerId = null;
+            document.getElementById('modal-title').textContent = 'Thêm Banner Mới';
+            document.getElementById('banner-form').reset();
+            document.getElementById('submit-btn').textContent = 'Thêm Banner';
+            document.getElementById('submit-btn').classList.remove('bg-yellow-500', 'hover:bg-yellow-600');
+            document.getElementById('submit-btn').classList.add('bg-green-500', 'hover:bg-green-600');
+            toggleModal(true);
+        };
+
+        // Mở modal để sửa banner
+        window.editBanner = (id, title, imageUrl, link, order) => {
+            currentBannerId = id;
+            document.getElementById('modal-title').textContent = 'Chỉnh Sửa Banner';
+            document.getElementById('title').value = title;
+            document.getElementById('imageUrl').value = imageUrl;
+            document.getElementById('link').value = link;
+            document.getElementById('order').value = order;
+            document.getElementById('submit-btn').textContent = 'Cập Nhật';
+            document.getElementById('submit-btn').classList.remove('bg-green-500', 'hover:bg-green-600');
+            document.getElementById('submit-btn').classList.add('bg-yellow-500', 'hover:bg-yellow-600');
+            toggleModal(true);
+        };
+
+        // Xử lý form submit
+        document.getElementById('banner-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const title = document.getElementById('title').value.trim();
+            const imageUrl = document.getElementById('imageUrl').value.trim();
+            const link = document.getElementById('link').value.trim();
+            const order = document.getElementById('order').value.trim();
+
+            if (!title || !imageUrl) {
+                showMessage("Vui lòng điền Tiêu đề và URL Ảnh.", true);
+                return;
+            }
+
+            if (currentBannerId) {
+                await updateBanner(currentBannerId, title, imageUrl, link, order);
+            } else {
+                await addBanner(title, imageUrl, link, order);
+            }
+            toggleModal(false);
+        });
+
+        // Hàm xác nhận xóa
+        window.confirmDelete = (id) => {
+            document.getElementById('delete-modal').classList.remove('hidden');
+            document.getElementById('delete-modal').dataset.deleteId = id;
+        };
+
+        // Xử lý nút xác nhận xóa
+        document.getElementById('confirm-delete-btn').addEventListener('click', async () => {
+            const idToDelete = document.getElementById('delete-modal').dataset.deleteId;
+            if (idToDelete) {
+                await deleteBanner(idToDelete);
+            }
+            document.getElementById('delete-modal').classList.add('hidden');
+        });
+
+        // Xử lý nút hủy xóa
+        document.getElementById('cancel-delete-btn').addEventListener('click', () => {
+            document.getElementById('delete-modal').classList.add('hidden');
+        });
+
+        // Khởi động xác thực
+        setupAuthAndFirestore();
+    </script>
+</head>
+<body>
+
+    <div id="app-container" class="min-h-screen p-4 sm:p-8">
+        <div class="max-w-4xl mx-auto">
+
+            <!-- Tiêu đề và thông tin người dùng -->
+            <header class="text-center mb-8 p-4 bg-white rounded-xl shadow-lg">
+                <h1 class="text-3xl font-extrabold text-indigo-700">
+                    Hệ Thống Quản Lý Banner
+                </h1>
+                <p id="user-id-display" class="text-xs text-gray-500 mt-2 truncate">Đang tải ID người dùng...</p>
+            </header>
+
+            <!-- Hộp thông báo -->
+            <div id="message-box" class="fixed top-5 left-1/2 transform -translate-x-1/2 z-50 opacity-0 pointer-events-none"></div>
+
+            <!-- Nút Thêm Mới -->
+            <div class="mb-6 flex justify-end">
+                <button onclick="window.openAddModal()"
+                        class="flex items-center px-4 py-2 bg-indigo-600 text-white font-semibold rounded-lg shadow-md hover:bg-indigo-700 transition duration-300">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd" />
+                    </svg>
+                    Thêm Banner Mới
+                </button>
+            </div>
+
+            <!-- Danh sách Banner -->
+            <div class="bg-white p-6 rounded-xl shadow-2xl">
+                <h2 class="text-2xl font-bold mb-4 border-b pb-2 text-indigo-600">Danh Sách Banners</h2>
+                <ul id="banner-list" class="space-y-4">
+                    <!-- Banners sẽ được render ở đây -->
+                    <p class="text-center text-gray-400 p-4">Đang tải dữ liệu...</p>
+                </ul>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Modal Thêm/Sửa Banner -->
+    <div id="banner-modal" class="fixed inset-0 bg-gray-900 bg-opacity-75 z-40 hidden flex items-center justify-center transition-all duration-300 opacity-0 scale-95">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg m-4 transform transition-all duration-300 p-6">
+            <h3 id="modal-title" class="text-2xl font-bold mb-4 border-b pb-2 text-gray-800">Thêm Banner Mới</h3>
+
+            <form id="banner-form" class="space-y-4">
+
+                <div>
+                    <label for="title" class="block text-sm font-medium text-gray-700 mb-1">Tiêu đề Banner (<span class="text-red-500">*</span>)</label>
+                    <input type="text" id="title" name="title" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500">
+                </div>
+
+                <div>
+                    <label for="imageUrl" class="block text-sm font-medium text-gray-700 mb-1">URL Ảnh (<span class="text-red-500">*</span>)</label>
+                    <input type="url" id="imageUrl" name="imageUrl" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500" placeholder="Ví dụ: https://placehold.co/800x200">
+                </div>
+
+                <div>
+                    <label for="link" class="block text-sm font-medium text-gray-700 mb-1">Đường dẫn Liên kết (URL)</label>
+                    <input type="url" id="link" name="link" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500" placeholder="Ví dụ: https://trangchu.com/sanpham">
+                </div>
+
+                <div>
+                    <label for="order" class="block text-sm font-medium text-gray-700 mb-1">Thứ tự hiển thị (Số)</label>
+                    <input type="number" id="order" name="order" value="0" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500">
+                </div>
+
+                <div class="flex justify-end space-x-3 pt-4">
+                    <button type="button" onclick="window.toggleModal(false)"
+                            class="px-4 py-2 bg-gray-300 text-gray-800 font-semibold rounded-lg hover:bg-gray-400 transition duration-150">
+                        Hủy
+                    </button>
+                    <button type="submit" id="submit-btn"
+                            class="px-4 py-2 bg-green-500 text-white font-semibold rounded-lg shadow-md hover:bg-green-600 transition duration-150">
+                        Thêm Banner
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Xác nhận Xóa -->
+    <div id="delete-modal" class="fixed inset-0 bg-gray-900 bg-opacity-75 z-40 hidden flex items-center justify-center transition-opacity duration-300">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-sm m-4 p-6">
+            <h3 class="text-xl font-bold mb-3 text-red-600">Xác Nhận Xóa</h3>
+            <p class="text-gray-700 mb-6">Bạn có chắc chắn muốn xóa banner này? Hành động này không thể hoàn tác.</p>
+            <div class="flex justify-end space-x-3">
+                <button id="cancel-delete-btn"
+                        class="px-4 py-2 bg-gray-300 text-gray-800 font-semibold rounded-lg hover:bg-gray-400 transition duration-150">
+                    Hủy
+                </button>
+                <button id="confirm-delete-btn"
+                        class="px-4 py-2 bg-red-600 text-white font-semibold rounded-lg shadow-md hover:bg-red-700 transition duration-150">
+                    Xóa
+                </button>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

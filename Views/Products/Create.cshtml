@@ -1,505 +1,296 @@
-﻿@model Ecommerce.Models.Product
+﻿@using Ecommerce.ViewModels
+@model Ecommerce.ViewModels.CreateProductViewModel
 
 @{
-    ViewData["Title"] = "Create Product";
+    ViewData["Title"] = "Tạo Sản phẩm Mới";
+    // Yêu cầu thư viện Font Awesome và Bootstrap (giả định đã được import trong _Layout)
     var categories = ViewData["Categories"] as List<Ecommerce.Models.Category>;
 }
 
-<div class="container py-4">
-    <h2 class="mb-4"><i class="bi bi-plus-circle"></i> Tạo Sản Phẩm Mới</h2>
+<h2 class="text-center my-4">TẠO SẢN PHẨM MỚI</h2>
 
-    <form asp-action="Create" method="post" enctype="multipart/form-data">
+<div class="row justify-content-center">
+    <div class="col-lg-10 col-xl-8">
+        <form asp-action="Create" asp-controller="ProductCreate" method="post" enctype="multipart/form-data">
 
-        <!-- Thông Tin Cơ Bản -->
-        <fieldset class="border p-3 mb-4 rounded bg-light">
-            <legend class="float-none w-auto px-3 fs-5 fw-bold text-primary">
-                <i class="bi bi-info-circle"></i> Thông Tin Sản Phẩm Cơ Bản
-            </legend>
+            <div class="accordion" id="createProductAccordion">
 
-            <div class="row">
-                <div class="col-md-8 form-group mb-3">
-                    <label asp-for="Name" class="form-label fw-semibold">Tên Sản Phẩm</label>
-                    <input asp-for="Name" class="form-control" placeholder="Ví dụ: Samsung Galaxy A36 5G" />
-                    <span asp-validation-for="Name" class="text-danger"></span>
-                </div>
-
-                <div class="col-md-4 form-group mb-3">
-                    <label for="SKU" class="form-label fw-semibold">Mã SKU</label>
-                    <input type="text" name="SKU" id="SKU" class="form-control" placeholder="PROD-001" />
-                </div>
-            </div>
-
-            <div class="form-group mb-3">
-                <label asp-for="CategoryId" class="form-label fw-semibold">Danh Mục</label>
-                <select asp-for="CategoryId" class="form-select" asp-items="@(new SelectList(categories, "CategoryId", "Name"))">
-                    <option value="">-- Chọn Danh Mục --</option>
-                </select>
-                <span asp-validation-for="CategoryId" class="text-danger"></span>
-            </div>
-
-            <div class="form-group mb-3">
-                <label for="ShortDescription" class="form-label fw-semibold">Mô Tả Ngắn</label>
-                <input type="text" name="ShortDescription" id="ShortDescription" class="form-control"
-                       placeholder="Mô tả ngắn gọn về sản phẩm (tối đa 200 ký tự)" />
-            </div>
-
-            <div class="form-check mb-3">
-                <input asp-for="IsPublished" class="form-check-input" checked />
-                <label asp-for="IsPublished" class="form-check-label">
-                    <strong>Đăng Bán Sản Phẩm Ngay</strong>
-                </label>
-            </div>
-        </fieldset>
-
-        <!-- Giá Bán và Kho Hàng -->
-        <fieldset class="border p-3 mb-4 rounded bg-light">
-            <legend class="float-none w-auto px-3 fs-5 fw-bold text-primary">
-                <i class="bi bi-currency-dollar"></i> Giá Bán & Kho Hàng
-            </legend>
-
-            <div class="row">
-                <div class="col-md-4 form-group mb-3">
-                    <label for="OriginalPrice" class="form-label fw-semibold">Giá Gốc (Niêm Yết)</label>
-                    <div class="input-group">
-                        <input type="number" name="OriginalPrice" id="OriginalPrice"
-                               class="form-control" value="0" min="0" placeholder="10000000" />
-                        <span class="input-group-text">₫</span>
-                    </div>
-                    <small class="text-muted">Giá trước khi giảm</small>
-                </div>
-
-                <div class="col-md-4 form-group mb-3">
-                    <label asp-for="Price" class="form-label fw-semibold text-danger">Giá Bán (Sau Giảm)</label>
-                    <div class="input-group">
-                        <input asp-for="Price" class="form-control" placeholder="9000000" />
-                        <span class="input-group-text">₫</span>
-                    </div>
-                    <span asp-validation-for="Price" class="text-danger"></span>
-                </div>
-
-                <div class="col-md-4 form-group mb-3">
-                    <label for="quantity" class="form-label fw-semibold">Số Lượng Tồn Kho</label>
-                    <input type="number" name="quantity" id="quantity"
-                           class="form-control" value="100" min="0" placeholder="100" />
-                </div>
-            </div>
-        </fieldset>
-
-        <!-- Banner Khuyến Mãi (Hình Ảnh) -->
-        <fieldset class="border p-3 mb-4 rounded bg-light">
-            <legend class="float-none w-auto px-3 fs-5 fw-bold text-primary">
-                <i class="bi bi-image"></i> Banner Khuyến Mãi (Hiển Thị Trên Giá)
-            </legend>
-            <p class="text-muted small mb-3">
-                <i class="bi bi-info-circle-fill"></i>
-                Upload ảnh banner khuyến mãi (khuyến nghị 400x150px). Banner này sẽ hiển thị phía trên phần giá bán.
-            </p>
-
-            <div class="row">
-                <div class="col-md-8 form-group mb-3">
-                    <label for="promoBannerImages" class="form-label fw-semibold">
-                        Chọn Hình Banner (Tối đa 2 ảnh)
-                    </label>
-                    <input type="file" name="promoBannerImages" id="promoBannerImages"
-                           multiple class="form-control" accept="image/*" />
-                    <small class="text-muted">Ví dụ: Ưu đãi Tân Sinh Viên, Giảm 3.000.000đ</small>
-                </div>
-
-                <div class="col-md-4">
-                    <label class="form-label fw-semibold d-block">Preview</label>
-                    <div id="bannerPreview" class="border rounded p-2" style="min-height: 100px;">
-                        <small class="text-muted">Hình ảnh sẽ hiện ở đây</small>
-                    </div>
-                </div>
-            </div>
-        </fieldset>
-
-        <!-- Phiên Bản (RAM/Bộ nhớ) -->
-        <fieldset class="border p-3 mb-4 rounded bg-light">
-            <legend class="float-none w-auto px-3 fs-5 fw-bold text-primary">
-                <i class="bi bi-cpu"></i> Phiên Bản Sản Phẩm (RAM/Bộ Nhớ)
-            </legend>
-
-            <div id="product-versions">
-                <div class="input-group mb-2 version-item">
-                    <input type="text" name="versions[]" class="form-control"
-                           placeholder="8GB - 128GB" />
-                    <button type="button" class="btn btn-outline-danger remove-version">
-                        <i class="bi bi-trash"></i>
-                    </button>
-                </div>
-            </div>
-
-            <button type="button" id="add-version" class="btn btn-sm btn-success">
-                <i class="bi bi-plus-circle"></i> Thêm Phiên Bản
-            </button>
-        </fieldset>
-
-        <!-- Màu Sắc -->
-        <fieldset class="border p-3 mb-4 rounded bg-light">
-            <legend class="float-none w-auto px-3 fs-5 fw-bold text-primary">
-                <i class="bi bi-palette"></i> Tùy Chọn Màu Sắc
-            </legend>
-
-            <div id="product-colors">
-                <div class="input-group mb-2 color-item">
-                    <input type="text" name="colors[]" class="form-control"
-                           placeholder="Tên Màu (Xanh Lá)" />
-                    <input type="color" name="hex_codes[]" class="form-control form-control-color w-auto"
-                           value="#00ff00" title="Chọn màu" />
-                    <button type="button" class="btn btn-outline-danger remove-color">
-                        <i class="bi bi-trash"></i>
-                    </button>
-                </div>
-            </div>
-
-            <button type="button" id="add-color" class="btn btn-sm btn-success">
-                <i class="bi bi-plus-circle"></i> Thêm Màu Sắc
-            </button>
-        </fieldset>
-
-        <!-- Khuyến Mãi Chi Tiết (Text) -->
-        <fieldset class="border p-3 mb-4 rounded" style="background: #fff5f5;">
-            <legend class="float-none w-auto px-3 fs-5 fw-bold text-danger">
-                <i class="bi bi-gift"></i> Chương Trình Khuyến Mãi
-            </legend>
-            <p class="text-muted small mb-3">
-                <i class="bi bi-lightbulb"></i>
-                Thêm các ưu đãi, quà tặng kèm theo sản phẩm. Mỗi dòng sẽ hiển thị dạng bullet point.
-            </p>
-
-            <div id="product-promotions">
-                <div class="row mb-2 promotion-item align-items-center">
-                    <div class="col-md-8">
-                        <input type="text" name="promo_content[]" class="form-control"
-                               placeholder="Nội dung khuyến mãi (VD: Giảm giá 500.000đ)" />
-                    </div>
-                    <div class="col-md-3">
-                        <input type="text" name="promo_note[]" class="form-control"
-                               placeholder="Ghi chú (VD: Áp dụng đến 31/10)" />
-                    </div>
-                    <div class="col-md-1">
-                        <button type="button" class="btn btn-outline-danger remove-promotion">
-                            <i class="bi bi-trash"></i>
+                @* ============================================== *@
+                @* MỤC 1: THÔNG TIN CƠ BẢN (Tên, Mô tả, Danh mục) *@
+                @* ============================================== *@
+                <div class="accordion-item shadow-sm mb-3">
+                    <h2 class="accordion-header" id="headingOne">
+                        <button class="accordion-button bg-light fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+                            1. THÔNG TIN CƠ BẢN
                         </button>
+                    </h2>
+                    <div id="collapseOne" class="accordion-collapse collapse show" aria-labelledby="headingOne" data-bs-parent="#createProductAccordion">
+                        <div class="accordion-body">
+                            <div class="form-group mb-3">
+                                <label asp-for="Name" class="form-label">Tên sản phẩm</label>
+                                <input asp-for="Name" class="form-control" />
+                                <span asp-validation-for="Name" class="text-danger"></span>
+                            </div>
+
+                            <div class="form-group mb-3">
+                                <label asp-for="ShortDescription" class="form-label">Mô tả ngắn</label>
+                                <input asp-for="ShortDescription" class="form-control" />
+                                <span asp-validation-for="ShortDescription" class="text-danger"></span>
+                            </div>
+
+                            <div class="form-group mb-3">
+                                <label asp-for="Description" class="form-label">Mô tả chi tiết</label>
+                                <textarea asp-for="Description" class="form-control" rows="5"></textarea>
+                                <span asp-validation-for="Description" class="text-danger"></span>
+                            </div>
+
+                            <div class="form-group mb-3">
+                                <label asp-for="CategoryId" class="form-label">Danh mục</label>
+                                <select asp-for="CategoryId" class="form-select" asp-items="@(new SelectList(categories, "CategoryId", "Name"))">
+                                    <option value="">-- Chọn Danh mục --</option>
+                                </select>
+                                <span asp-validation-for="CategoryId" class="text-danger"></span>
+                            </div>
+
+                            <div class="form-check form-switch mt-4">
+                                <input asp-for="IsPublished" class="form-check-input" type="checkbox" role="switch" id="isPublishedSwitch" />
+                                <label asp-for="IsPublished" class="form-check-label" for="isPublishedSwitch">Đang xuất bản?</label>
+                                <span asp-validation-for="IsPublished" class="text-danger"></span>
+                            </div>
+                        </div>
                     </div>
                 </div>
+
+                @* ============================================== *@
+                @* MỤC 2: GIÁ & KHO HÀNG *@
+                @* ============================================== *@
+                <div class="accordion-item shadow-sm mb-3">
+                    <h2 class="accordion-header" id="headingTwo">
+                        <button class="accordion-button collapsed bg-light fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+                            2. GIÁ, MÃ SẢN PHẨM & KHO HÀNG
+                        </button>
+                    </h2>
+                    <div id="collapseTwo" class="accordion-collapse collapse" aria-labelledby="headingTwo" data-bs-parent="#createProductAccordion">
+                        <div class="accordion-body">
+                            <div class="form-group mb-3">
+                                <label asp-for="SKU" class="form-label">Mã SKU</label>
+                                <input asp-for="SKU" class="form-control" />
+                                <span asp-validation-for="SKU" class="text-danger"></span>
+                            </div>
+
+                            <div class="form-group mb-3">
+                                <label asp-for="Price" class="form-label">Giá niêm yết (VND)</label>
+                                <input asp-for="Price" class="form-control" type="number" step="0.01" />
+                                <span asp-validation-for="Price" class="text-danger"></span>
+                            </div>
+
+                            <div class="form-group mb-3">
+                                <label asp-for="SalePrice" class="form-label">Giá khuyến mãi (VND) (Để trống nếu không)</label>
+                                <input asp-for="SalePrice" class="form-control" type="number" step="0.01" />
+                                <span asp-validation-for="SalePrice" class="text-danger"></span>
+                            </div>
+
+                            <div class="form-group mb-3">
+                                <label asp-for="Quantity" class="form-label">Số lượng tồn kho</label>
+                                <input asp-for="Quantity" class="form-control" type="number" value="0" min="0" />
+                                <span asp-validation-for="Quantity" class="text-danger"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                @* ============================================== *@
+                @* MỤC 3: THÔNG SỐ KỸ THUẬT & HÌNH ẢNH (DÙNG JS) *@
+                @* ============================================== *@
+                <div class="accordion-item shadow-sm mb-3">
+                    <h2 class="accordion-header" id="headingThree">
+                        <button class="accordion-button collapsed bg-light fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
+                            3. THÔNG SỐ KỸ THUẬT & HÌNH ẢNH
+                        </button>
+                    </h2>
+                    <div id="collapseThree" class="accordion-collapse collapse" aria-labelledby="headingThree" data-bs-parent="#createProductAccordion">
+                        <div class="accordion-body">
+
+                            <h5 class="mb-3">Thông số Kỹ thuật Chi tiết (Tạo Mục lớn & Mục nhỏ)</h5>
+
+                            <div id="specsContainer">
+                            </div>
+
+                            <button type="button" id="addNewGroupBtn" class="btn btn-outline-primary btn-sm mt-3">
+                                <i class="fas fa-plus"></i> Thêm Nhóm Thông số (Mục lớn)
+                            </button>
+
+                            <input type="hidden" name="Specifications" id="ProductSpecsJson" />
+
+                            <hr class="my-4" />
+
+                            <h5 class="mb-3">Hình ảnh Sản phẩm</h5>
+                            <div class="form-group mb-3">
+                                <label asp-for="Images" class="form-label">Tải ảnh lên</label>
+                                <input type="file" asp-for="Images" multiple class="form-control" />
+                                <span asp-validation-for="Images" class="text-danger"></span>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+
+            </div> @* End Accordion *@
+
+            <div class="mt-4 mb-5 text-center">
+                <button type="submit" class="btn btn-success btn-lg me-3" style="width: 180px;">
+                    <i class="fas fa-check-circle me-1"></i> TẠO SẢN PHẨM
+                </button>
+                <a asp-action="Index" class="btn btn-secondary btn-lg" asp-controller="Products" style="width: 180px;">
+                    <i class="fas fa-arrow-left me-1"></i> Quay lại
+                </a>
             </div>
 
-            <button type="button" id="add-promotion" class="btn btn-sm btn-success">
-                <i class="bi bi-plus-circle"></i> Thêm Khuyến Mãi
-            </button>
+        </form>
 
-            <div class="alert alert-info mt-3 small">
-                <strong><i class="bi bi-question-circle"></i> Gợi ý nội dung:</strong>
-                <ul class="mb-0 mt-2">
-                    <li>Phiếu mua hàng đồng hồ, phụ kiện Samsung trị giá 400.000đ</li>
-                    <li>Phiếu mua hàng trị giá 1.000.000đ mua tablet có giá niềm yết từ 10.000.000đ</li>
-                    <li>Tặng Phiếu Mua Hàng Màn hình máy tính Samsung trị giá 200.000đ</li>
-                    <li>Trả chậm 0% lãi suất. Đặc biệt giảm đến 10% tối đa 5 triệu qua Kredivo</li>
+        @* Hiển thị lỗi *@
+        @if (ViewBag.Errors != null)
+        {
+            <div class="alert alert-danger mt-4">
+                <h6>Lỗi tạo sản phẩm:</h6>
+                <ul>
+                    @foreach (var err in (List<string>)ViewBag.Errors)
+                    {
+                        <li>@err</li>
+                    }
                 </ul>
             </div>
-        </fieldset>
-
-        <!-- Hình Ảnh Sản Phẩm -->
-        <fieldset class="border p-3 mb-4 rounded bg-light">
-            <legend class="float-none w-auto px-3 fs-5 fw-bold text-primary">
-                <i class="bi bi-images"></i> Hình Ảnh Sản Phẩm (Thumbnails)
-            </legend>
-
-            <div class="form-group mb-3">
-                <label for="images" class="form-label fw-semibold">
-                    Chọn Nhiều Ảnh (Ảnh đầu tiên sẽ là ảnh chính)
-                </label>
-                <input type="file" name="images" id="images" multiple
-                       class="form-control" accept="image/*" />
-                <small class="text-muted">Khuyến nghị: Ảnh vuông 800x800px, định dạng JPG/PNG</small>
-            </div>
-
-            <div id="imagePreview" class="d-flex flex-wrap gap-2 mt-3">
-                <!-- Preview images sẽ hiện ở đây -->
-            </div>
-        </fieldset>
-
-        <!-- Mô Tả Chi Tiết / Thông Tin Sản Phẩm -->
-        <fieldset class="border p-3 mb-4 rounded bg-light">
-            <legend class="float-none w-auto px-3 fs-5 fw-bold text-primary">
-                <i class="bi bi-file-text"></i> Thông Tin Sản Phẩm (Mô Tả)
-            </legend>
-            <p class="text-muted small">
-                Mô tả chi tiết về sản phẩm, tính năng nổi bật. Hỗ trợ HTML.
-            </p>
-
-            <div class="form-group mb-3">
-                <textarea asp-for="Description" class="form-control" rows="8"
-                          id="descriptionEditor"
-                          placeholder="Nhập mô tả chi tiết về sản phẩm..."></textarea>
-                <span asp-validation-for="Description" class="text-danger"></span>
-            </div>
-
-            <div class="alert alert-warning small">
-                <strong><i class="bi bi-exclamation-triangle"></i> Lưu ý:</strong>
-                Nội dung này sẽ hiển thị trong tab "Thông tin sản phẩm" ở trang chi tiết.
-            </div>
-        </fieldset>
-
-        <!-- Thông Số Kỹ Thuật -->
-        <fieldset class="border p-3 mb-4 rounded bg-light">
-            <legend class="float-none w-auto px-3 fs-5 fw-bold text-primary">
-                <i class="bi bi-list-check"></i> Thông Số Kỹ Thuật
-            </legend>
-            <p class="text-muted small">
-                Thêm các thông số kỹ thuật chi tiết theo từng nhóm (Màn hình, Camera, Pin, v.v.)
-            </p>
-
-            <div id="spec-groups-container">
-                <!-- Nhóm Màn Hình -->
-                <div class="card mb-3 spec-group-item" data-group-id="0">
-                    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-                        <input type="text" name="spec_group_name_0"
-                               class="form-control form-control-sm w-50 bg-white"
-                               value="Màn hình" placeholder="Tên nhóm" />
-                        <div>
-                            <button type="button" class="btn btn-sm btn-light add-spec-item" data-group-id="0">
-                                <i class="bi bi-plus"></i> Thêm
-                            </button>
-                            <button type="button" class="btn btn-sm btn-danger remove-spec-group">
-                                <i class="bi bi-trash"></i>
-                            </button>
-                        </div>
-                    </div>
-                    <div class="card-body spec-items-container">
-                        <div class="row mb-2 spec-item">
-                            <div class="col-4">
-                                <input type="text" name="spec_item_name_0[]"
-                                       class="form-control form-control-sm"
-                                       value="Công nghệ màn hình" placeholder="Tên" />
-                            </div>
-                            <div class="col-7">
-                                <input type="text" name="spec_item_value_0[]"
-                                       class="form-control form-control-sm"
-                                       placeholder="Giá trị" />
-                            </div>
-                            <div class="col-1">
-                                <button type="button" class="btn btn-sm btn-outline-danger remove-spec-item">
-                                    <i class="bi bi-x"></i>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <button type="button" id="add-spec-group" class="btn btn-sm btn-primary">
-                <i class="bi bi-plus-circle"></i> Thêm Nhóm Thông Số
-            </button>
-
-            <div class="alert alert-info small mt-3">
-                <strong><i class="bi bi-lightbulb"></i> Gợi ý các nhóm:</strong>
-                Màn hình, Camera sau, Camera trước, Hệ điều hành & CPU, Bộ nhớ & Lưu trữ, Pin & Sạc, Kết nối, Thiết kế & Trọng lượng
-            </div>
-        </fieldset>
-
-        <!-- Nút Submit -->
-        <div class="d-flex gap-2 mb-5">
-            <button type="submit" class="btn btn-primary btn-lg">
-                <i class="bi bi-save"></i> Tạo Sản Phẩm
-            </button>
-            <a asp-action="Index" class="btn btn-secondary btn-lg">
-                <i class="bi bi-arrow-left"></i> Quay Lại
-            </a>
-        </div>
-    </form>
-
-    @if (ViewBag.Errors != null)
-    {
-        <div class="alert alert-danger">
-            <h5><i class="bi bi-exclamation-triangle"></i> Có lỗi xảy ra:</h5>
-            <ul>
-                @foreach (var err in (List<string>)ViewBag.Errors)
-                {
-                    <li>@err</li>
-                }
-            </ul>
-        </div>
-    }
+        }
+    </div>
 </div>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
     <script>
-        let specGroupIndex = 1;
+        document.addEventListener("DOMContentLoaded", function () {
+            const specsContainer = document.getElementById('specsContainer');
+            const addNewGroupBtn = document.getElementById('addNewGroupBtn');
+            const productSpecsJsonInput = document.getElementById('ProductSpecsJson');
+            const form = document.querySelector('form');
+            let groupIndex = 0;
 
-        // ===== 1. QUẢN LÝ PHIÊN BẢN =====
-        document.getElementById('add-version').addEventListener('click', function () {
-            const container = document.getElementById('product-versions');
-            const newItem = document.createElement('div');
-            newItem.className = 'input-group mb-2 version-item';
-            newItem.innerHTML = `
-                <input type="text" name="versions[]" class="form-control" placeholder="12GB - 256GB" />
-                <button type="button" class="btn btn-outline-danger remove-version">
-                    <i class="bi bi-trash"></i>
-                </button>
-            `;
-            container.appendChild(newItem);
-        });
-
-        document.getElementById('product-versions').addEventListener('click', function (e) {
-            if (e.target.closest('.remove-version')) {
-                e.target.closest('.version-item').remove();
-            }
-        });
-
-        // ===== 2. QUẢN LÝ MÀU SẮC =====
-        document.getElementById('add-color').addEventListener('click', function () {
-            const container = document.getElementById('product-colors');
-            const newItem = document.createElement('div');
-            newItem.className = 'input-group mb-2 color-item';
-            const randomColor = '#' + Math.floor(Math.random()*16777215).toString(16);
-            newItem.innerHTML = `
-                <input type="text" name="colors[]" class="form-control" placeholder="Tên Màu" />
-                <input type="color" name="hex_codes[]" class="form-control form-control-color w-auto"
-                       value="${randomColor}" title="Chọn màu" />
-                <button type="button" class="btn btn-outline-danger remove-color">
-                    <i class="bi bi-trash"></i>
-                </button>
-            `;
-            container.appendChild(newItem);
-        });
-
-        document.getElementById('product-colors').addEventListener('click', function (e) {
-            if (e.target.closest('.remove-color')) {
-                e.target.closest('.color-item').remove();
-            }
-        });
-
-        // ===== 3. QUẢN LÝ KHUYẾN MÃI =====
-        document.getElementById('add-promotion').addEventListener('click', function () {
-            const container = document.getElementById('product-promotions');
-            const newItem = document.createElement('div');
-            newItem.className = 'row mb-2 promotion-item align-items-center';
-            newItem.innerHTML = `
-                <div class="col-md-8">
-                    <input type="text" name="promo_content[]" class="form-control"
-                           placeholder="Nội dung khuyến mãi" />
-                </div>
-                <div class="col-md-3">
-                    <input type="text" name="promo_note[]" class="form-control"
-                           placeholder="Ghi chú (tùy chọn)" />
-                </div>
-                <div class="col-md-1">
-                    <button type="button" class="btn btn-outline-danger remove-promotion">
-                        <i class="bi bi-trash"></i>
-                    </button>
-                </div>
-            `;
-            container.appendChild(newItem);
-        });
-
-        document.getElementById('product-promotions').addEventListener('click', function (e) {
-            if (e.target.closest('.remove-promotion')) {
-                e.target.closest('.promotion-item').remove();
-            }
-        });
-
-        // ===== 4. QUẢN LÝ THÔNG SỐ KỸ THUẬT =====
-        function createSpecItem(groupId) {
-            const item = document.createElement('div');
-            item.className = 'row mb-2 spec-item';
-            item.innerHTML = `
-                <div class="col-4">
-                    <input type="text" name="spec_item_name_${groupId}[]"
-                           class="form-control form-control-sm" placeholder="Tên thuộc tính" />
-                </div>
-                <div class="col-7">
-                    <input type="text" name="spec_item_value_${groupId}[]"
-                           class="form-control form-control-sm" placeholder="Giá trị" />
-                </div>
-                <div class="col-1">
-                    <button type="button" class="btn btn-sm btn-outline-danger remove-spec-item">
-                        <i class="bi bi-x"></i>
-                    </button>
-                </div>
-            `;
-            return item;
-        }
-
-        function createSpecGroup() {
-            const groupId = specGroupIndex++;
-            const group = document.createElement('div');
-            group.className = 'card mb-3 spec-group-item';
-            group.setAttribute('data-group-id', groupId);
-            group.innerHTML = `
-                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-                    <input type="text" name="spec_group_name_${groupId}"
-                           class="form-control form-control-sm w-50 bg-white" placeholder="Tên nhóm" />
-                    <div>
-                        <button type="button" class="btn btn-sm btn-light add-spec-item" data-group-id="${groupId}">
-                            <i class="bi bi-plus"></i> Thêm
-                        </button>
-                        <button type="button" class="btn btn-sm btn-danger remove-spec-group">
-                            <i class="bi bi-trash"></i>
+            // Hàm tạo Markup cho một mục nhỏ (Key-Value)
+            function createSpecItemMarkup(groupId, key = '', value = '') {
+                const specItemId = `spec-${groupId}-${Math.random().toString(36).substr(2, 9)}`;
+                return `
+                    <div class="input-group mb-2 spec-item" id="${specItemId}">
+                        <input type="text" class="form-control spec-key" placeholder="Tên thông số (VD: Hệ điều hành)" value="${key}" required>
+                        <input type="text" class="form-control spec-value" placeholder="Giá trị (VD: Android 15)" value="${value}" required>
+                        <button type="button" class="btn btn-outline-danger remove-spec-item" data-id="${specItemId}" title="Xóa thông số này">
+                            <i class="fas fa-times"></i>
                         </button>
                     </div>
-                </div>
-                <div class="card-body spec-items-container"></div>
-            `;
-            document.getElementById('spec-groups-container').appendChild(group);
-            return groupId;
-        }
-
-        document.getElementById('add-spec-group').addEventListener('click', function () {
-            createSpecGroup();
-        });
-
-        document.getElementById('spec-groups-container').addEventListener('click', function (e) {
-            if (e.target.closest('.remove-spec-group')) {
-                e.target.closest('.spec-group-item').remove();
-            } else if (e.target.closest('.remove-spec-item')) {
-                e.target.closest('.spec-item').remove();
-            } else if (e.target.closest('.add-spec-item')) {
-                const groupId = e.target.closest('.add-spec-item').getAttribute('data-group-id');
-                const container = e.target.closest('.spec-group-item').querySelector('.spec-items-container');
-                container.appendChild(createSpecItem(groupId));
+                `;
             }
-        });
 
-        // ===== 5. PREVIEW HÌNH ẢNH =====
-        document.getElementById('images')?.addEventListener('change', function(e) {
-            const preview = document.getElementById('imagePreview');
-            preview.innerHTML = '';
+            // Hàm tạo Markup cho một nhóm thông số (Mục lớn)
+            function createSpecGroupMarkup(groupName = 'Nhóm thông số mới', initialSpecs = []) {
+                const groupId = groupIndex++;
+                const groupElement = document.createElement('div');
+                groupElement.className = 'card card-body mb-3 spec-group';
+                groupElement.setAttribute('data-group-id', groupId);
 
-            Array.from(e.target.files).forEach((file, index) => {
-                const reader = new FileReader();
-                reader.onload = function(event) {
-                    const div = document.createElement('div');
-                    div.className = 'position-relative';
-                    div.innerHTML = `
-                        <img src="${event.target.result}" class="border rounded"
-                             style="width: 100px; height: 100px; object-fit: cover;" />
-                        ${index === 0 ? '<span class="badge bg-primary position-absolute top-0 start-0 m-1">Chính</span>' : ''}
-                    `;
-                    preview.appendChild(div);
-                };
-                reader.readAsDataURL(file);
+                let initialSpecsMarkup = initialSpecs.length > 0
+                    ? initialSpecs.map(spec => createSpecItemMarkup(groupId, spec.Key, spec.Value)).join('')
+                    : createSpecItemMarkup(groupId); // Thêm 1 mục mặc định nếu không có
+
+                groupElement.innerHTML = `
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <input type="text" class="form-control group-title fw-bold" style="width: 70%;" placeholder="Tên Mục lớn (VD: Cấu hình & Bộ nhớ)" value="${groupName}" required>
+                        <div>
+                            <button type="button" class="btn btn-sm btn-success add-spec-item me-2" data-group-id="${groupId}" title="Thêm thông số chi tiết">
+                                <i class="fas fa-plus"></i> Mục nhỏ
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-danger remove-spec-group" data-group-id="${groupId}" title="Xóa toàn bộ nhóm này">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="specs-list" id="specs-list-${groupId}">
+                        ${initialSpecsMarkup}
+                    </div>
+                `;
+                return groupElement;
+            }
+
+            // Logic Thêm nhóm thông số mới (Mục lớn)
+            addNewGroupBtn.addEventListener('click', function() {
+                const newGroup = createSpecGroupMarkup();
+                specsContainer.appendChild(newGroup);
             });
-        });
 
-        // Preview banner
-        document.getElementById('promoBannerImages')?.addEventListener('change', function(e) {
-            const preview = document.getElementById('bannerPreview');
-            preview.innerHTML = '';
+            // Khởi tạo nhóm mặc định (Ví dụ)
+            specsContainer.appendChild(createSpecGroupMarkup('Cấu hình & Bộ nhớ', [
+                { Key: 'Hệ điều hành', Value: 'Android 15' },
+                { Key: 'Chip xử lý (CPU)', Value: 'Exynos 1580 8 nhân' }
+            ]));
 
-            Array.from(e.target.files).slice(0, 2).forEach((file) => {
-                const reader = new FileReader();
-                reader.onload = function(event) {
-                    const img = document.createElement('img');
-                    img.src = event.target.result;
-                    img.className = 'img-fluid rounded mb-2';
-                    img.style.maxHeight = '80px';
-                    preview.appendChild(img);
-                };
-                reader.readAsDataURL(file);
+            // Logic Thêm/Xóa Mục nhỏ/Mục lớn (Sử dụng event delegation)
+            specsContainer.addEventListener('click', function(e) {
+                // Thêm mục nhỏ
+                if (e.target.closest('.add-spec-item')) {
+                    const button = e.target.closest('.add-spec-item');
+                    const groupId = button.getAttribute('data-group-id');
+                    const specsList = document.getElementById(`specs-list-${groupId}`);
+                    specsList.insertAdjacentHTML('beforeend', createSpecItemMarkup(groupId, '', ''));
+                }
+
+                // Xóa mục nhỏ
+                if (e.target.closest('.remove-spec-item')) {
+                    const button = e.target.closest('.remove-spec-item');
+                    const specItemId = button.getAttribute('data-id');
+                    document.getElementById(specItemId).remove();
+                }
+
+                // Xóa mục lớn
+                if (e.target.closest('.remove-spec-group')) {
+                    const button = e.target.closest('.remove-spec-group');
+                    const groupId = button.getAttribute('data-group-id');
+                    const groupElement = specsContainer.querySelector(`.spec-group[data-group-id="${groupId}"]`);
+                    if (confirm('Bạn có chắc chắn muốn xóa nhóm thông số này không?')) {
+                        groupElement.remove();
+                    }
+                }
+            });
+
+            // Logic chính: Thu thập dữ liệu và chuyển thành JSON trước khi submit
+            form.addEventListener('submit', function(e) {
+                const allSpecs = [];
+
+                document.querySelectorAll('.spec-group').forEach(groupElement => {
+                    const groupTitle = groupElement.querySelector('.group-title').value.trim();
+                    const specifications = [];
+
+                    if (groupTitle) {
+                        groupElement.querySelectorAll('.spec-item').forEach(item => {
+                            const key = item.querySelector('.spec-key').value.trim();
+                            const value = item.querySelector('.spec-value').value.trim();
+
+                            // Chỉ thêm các cặp Key/Value không rỗng
+                            if (key && value) {
+                                specifications.push({ Key: key, Value: value });
+                            }
+                        });
+
+                        // Chỉ thêm nhóm nếu có ít nhất một thông số chi tiết
+                        if (specifications.length > 0) {
+                            allSpecs.push({
+                                GroupTitle: groupTitle,
+                                Specifications: specifications
+                            });
+                        }
+                    }
+                });
+
+                // Lưu chuỗi JSON vào trường ẩn 'Specifications'
+                productSpecsJsonInput.value = JSON.stringify(allSpecs);
+
+                // Tiếp tục submit form
             });
         });
     </script>
